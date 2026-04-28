@@ -7,18 +7,6 @@
   <meta name="theme-color" content="#2563eb" />
   <title>Contabilidad con Cuentas T</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    }
-
     :root {
       --bg-primary: #f8fafc;
       --bg-secondary: #ffffff;
@@ -77,9 +65,21 @@
       --theme-btn-text: #cbd5e1;
     }
 
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body, #root {
+      width: 100%;
+      height: 100%;
+    }
+
     body {
       background-color: var(--bg-primary);
       color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
@@ -131,6 +131,7 @@
       justify-content: center;
       transition: all 0.3s ease;
       flex-shrink: 0;
+      font-size: 1.5rem;
     }
 
     .theme-toggle:hover {
@@ -383,14 +384,364 @@
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  
-  <script type="module">
-    // Importar la aplicación React compilada
-    import('./client/dist/index.js').catch(err => {
-      console.error('Error loading app:', err);
-      document.body.innerHTML = '<div style="padding: 2rem; text-align: center;"><h1>Error al cargar la aplicación</h1><p>Por favor, asegúrate de que la aplicación ha sido compilada correctamente.</p></div>';
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <h1>Contabilidad con Cuentas T</h1>
+        <p>Registra cuentas, transacciones de débito y crédito, y observa los saldos en formato Cuenta T.</p>
+      </div>
+      <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙</button>
+    </header>
+
+    <!-- Add Account Section -->
+    <div class="card">
+      <h2>1. Agregar cuenta</h2>
+      <form id="accountForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nombre de la cuenta</label>
+            <input type="text" name="account-name" required placeholder="Caja, Ventas, Compras..." />
+          </div>
+          <div class="form-group">
+            <label>Tipo de cuenta</label>
+            <select name="account-type" required>
+              <option value="">Selecciona un tipo</option>
+              <option value="Activo">Activo</option>
+              <option value="Pasivo">Pasivo</option>
+              <option value="Patrimonio">Patrimonio</option>
+              <option value="Ingreso">Ingreso</option>
+              <option value="Gasto">Gasto</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Saldo inicial</label>
+            <input type="number" name="account-balance" min="0" step="0.01" value="0" />
+          </div>
+          <div class="form-group">
+            <label>Clasificación</label>
+            <select name="account-cost-type">
+              <option value="Fijo">Fijo</option>
+              <option value="Variable">Variable</option>
+              <option value="Pasivo">Pasivo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Moneda</label>
+            <select name="account-currency">
+              <option value="MXN">MXN</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+          <div class="form-group" style="justify-content: flex-end;">
+            <button type="submit" class="btn-primary">Agregar cuenta</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Accounts List -->
+    <div class="card">
+      <h2>2. Lista de cuentas</h2>
+      <div class="table-wrapper">
+        <table id="accountsTable">
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th>Tipo</th>
+              <th>Clasificación</th>
+              <th>Saldo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add Transaction -->
+    <div class="card">
+      <h2>3. Registrar transacción</h2>
+      <form id="transactionForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" name="transaction-date" required />
+          </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <input type="text" name="transaction-description" required placeholder="Venta de productos" />
+          </div>
+          <div class="form-group">
+            <label>Cuenta</label>
+            <select name="transaction-account" id="transactionAccountSelect" required>
+              <option value="">Seleccione cuenta</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Movimiento</label>
+            <select name="transaction-movement" required>
+              <option value="">Selecciona movimiento</option>
+              <option value="Entrada">Entrada (Débito)</option>
+              <option value="Salida">Salida (Crédito)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Monto</label>
+            <input type="number" name="transaction-amount" min="0.01" step="0.01" required value="0.00" />
+          </div>
+          <div class="form-group" style="justify-content: flex-end;">
+            <button type="submit" class="btn-primary">Registrar transacción</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Transactions List -->
+    <div class="card">
+      <h2>4. Transacciones registradas</h2>
+      <div class="table-wrapper">
+        <table id="transactionsTable">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Descripción</th>
+              <th>Cuenta</th>
+              <th>Movimiento</th>
+              <th>Monto</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card">
+      <h2>5. Resumen de Cuentas T</h2>
+      <div class="grid-2" id="accountsGrid"></div>
+      <div class="summary-box">
+        <div>
+          <strong>Total Débito:</strong>
+          <span id="totalDebit">0.00</span>
+        </div>
+        <div>
+          <strong>Total Crédito:</strong>
+          <span id="totalCredit">0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Statements -->
+    <div class="grid-2">
+      <div class="income-card">
+        <h2>Estado de Resultados</h2>
+        <div class="stat">
+          <span>Ingresos:</span>
+          <span id="income">0.00</span>
+        </div>
+        <div class="stat">
+          <span>Gastos:</span>
+          <span id="expenses">0.00</span>
+        </div>
+        <div class="stat divider">
+          <span>Utilidad / Pérdida:</span>
+          <span id="netIncome">0.00</span>
+        </div>
+      </div>
+
+      <div class="income-card">
+        <h2>Balance General</h2>
+        <div class="stat">
+          <span>Activos:</span>
+          <span id="assets">0.00</span>
+        </div>
+        <div class="stat">
+          <span>Pasivos:</span>
+          <span id="liabilities">0.00</span>
+        </div>
+        <div class="stat">
+          <span>Patrimonio:</span>
+          <span id="equity">0.00</span>
+        </div>
+        <div class="stat divider">
+          <span>Pasivos + Patrimonio:</span>
+          <span id="totalLiabilitiesEquity">0.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let accounts = [];
+    let transactions = [];
+    let isDarkMode = false;
+
+    const formatCurrency = (value) => {
+      return Number(value).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    const getNormalBalanceType = (account) => {
+      if (account.type === 'Activo' || account.type === 'Gasto') return 'Debit';
+      return 'Credit';
+    };
+
+    const computeBalance = (account) => {
+      const debits = account.debits.reduce((sum, item) => sum + item.amount, 0) +
+        (getNormalBalanceType(account) === 'Debit' ? account.initialBalance : 0);
+      const credits = account.credits.reduce((sum, item) => sum + item.amount, 0) +
+        (getNormalBalanceType(account) === 'Credit' ? account.initialBalance : 0);
+      return debits - credits;
+    };
+
+    const toggleTheme = () => {
+      isDarkMode = !isDarkMode;
+      localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+      document.getElementById('themeToggle').textContent = isDarkMode ? '☀️' : '🌙';
+    };
+
+    const updateAccountOptions = () => {
+      const select = document.getElementById('transactionAccountSelect');
+      select.innerHTML = '<option value="">Seleccione cuenta</option>' +
+        accounts.map(acc => `<option value="${acc.id}">${acc.name}</option>`).join('');
+    };
+
+    const refreshUI = () => {
+      // Accounts table
+      const accountsBody = document.querySelector('#accountsTable tbody');
+      accountsBody.innerHTML = accounts.map(acc => `
+        <tr>
+          <td>${acc.name}</td>
+          <td>${acc.type}</td>
+          <td>${acc.costType}</td>
+          <td>${formatCurrency(Math.abs(computeBalance(acc)))} ${acc.currency}</td>
+        </tr>
+      `).join('');
+
+      // Transactions table
+      const transactionsBody = document.querySelector('#transactionsTable tbody');
+      transactionsBody.innerHTML = transactions.map(tx => `
+        <tr>
+          <td>${tx.date}</td>
+          <td>${tx.description}</td>
+          <td>${tx.accountName}</td>
+          <td>${tx.movement}</td>
+          <td>${formatCurrency(tx.amount)}</td>
+          <td><button class="btn-danger" onclick="removeTransaction('${tx.id}')">Eliminar</button></td>
+        </tr>
+      `).join('');
+
+      // Accounts grid
+      const grid = document.getElementById('accountsGrid');
+      grid.innerHTML = accounts.map(acc => `
+        <div class="account-card">
+          <h3>${acc.name} <span class="small">(${acc.type})</span></h3>
+          <p><strong>Saldo:</strong> ${formatCurrency(Math.abs(computeBalance(acc)))}</p>
+          <p><strong>Clasificación:</strong> ${acc.costType}</p>
+        </div>
+      `).join('');
+
+      // Totals
+      const totalDebits = transactions.filter(t => t.movement === 'Entrada').reduce((s, t) => s + t.amount, 0);
+      const totalCredits = transactions.filter(t => t.movement === 'Salida').reduce((s, t) => s + t.amount, 0);
+      document.getElementById('totalDebit').textContent = formatCurrency(totalDebits);
+      document.getElementById('totalCredit').textContent = formatCurrency(totalCredits);
+
+      // Financial statements
+      const income = accounts.filter(a => a.type === 'Ingreso').reduce((s, a) => s + computeBalance(a) * -1, 0);
+      const expenses = accounts.filter(a => a.type === 'Gasto').reduce((s, a) => s + computeBalance(a), 0);
+      const netIncome = income - expenses;
+
+      document.getElementById('income').textContent = formatCurrency(income);
+      document.getElementById('expenses').textContent = formatCurrency(expenses);
+      document.getElementById('netIncome').textContent = formatCurrency(netIncome);
+
+      const assets = accounts.filter(a => a.type === 'Activo').reduce((s, a) => s + computeBalance(a), 0);
+      const liabilities = accounts.filter(a => a.type === 'Pasivo').reduce((s, a) => s + computeBalance(a) * -1, 0);
+      const equity = accounts.filter(a => a.type === 'Patrimonio').reduce((s, a) => s + computeBalance(a) * -1, 0) + netIncome;
+
+      document.getElementById('assets').textContent = formatCurrency(assets);
+      document.getElementById('liabilities').textContent = formatCurrency(liabilities);
+      document.getElementById('equity').textContent = formatCurrency(equity);
+      document.getElementById('totalLiabilitiesEquity').textContent = formatCurrency(liabilities + equity);
+    };
+
+    const removeTransaction = (id) => {
+      const transaction = transactions.find(t => t.id === id);
+      if (!transaction) return;
+
+      transactions = transactions.filter(t => t.id !== id);
+      const account = accounts.find(a => a.id === transaction.accountId);
+      if (account) {
+        if (transaction.movement === 'Entrada') {
+          account.debits.pop();
+        } else {
+          account.credits.pop();
+        }
+      }
+      refreshUI();
+    };
+
+    document.getElementById('accountForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      accounts.push({
+        id: Math.random().toString(36).substr(2, 9),
+        name: formData.get('account-name'),
+        type: formData.get('account-type'),
+        costType: formData.get('account-cost-type'),
+        initialBalance: Number(formData.get('account-balance')) || 0,
+        currency: formData.get('account-currency'),
+        debits: [],
+        credits: []
+      });
+      e.target.reset();
+      updateAccountOptions();
+      refreshUI();
     });
+
+    document.getElementById('transactionForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const accountId = formData.get('transaction-account');
+      const account = accounts.find(a => a.id === accountId);
+      if (!account) return;
+
+      const amount = Number(formData.get('transaction-amount'));
+      const movement = formData.get('transaction-movement');
+
+      transactions.push({
+        id: Math.random().toString(36).substr(2, 9),
+        date: formData.get('transaction-date'),
+        description: formData.get('transaction-description'),
+        accountId,
+        accountName: account.name,
+        movement,
+        amount
+      });
+
+      if (movement === 'Entrada') {
+        account.debits.push({ amount });
+      } else {
+        account.credits.push({ amount });
+      }
+
+      e.target.reset();
+      refreshUI();
+    });
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    // Initialize theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      isDarkMode = true;
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.getElementById('themeToggle').textContent = '☀️';
+    }
+
+    refreshUI();
   </script>
 </body>
 </html>
