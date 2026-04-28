@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Moon, Sun } from 'lucide-react';
 
 interface Account {
@@ -33,12 +31,18 @@ export default function Home() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.setAttribute('data-theme', 'light');
     }
   }, []);
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    localStorage.setItem('theme', !isDarkMode ? 'dark' : 'light');
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme', newMode ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
   };
 
   const formatCurrency = (value: number) => {
@@ -159,296 +163,462 @@ export default function Home() {
     .reduce((s, a) => s + computeBalance(a) * -1, 0) + netIncome;
 
   return (
-    <div
-      className={`min-h-screen transition-all duration-300 ${
-        isDarkMode ? 'dark-bg' : 'light-bg'
-      }`}
-    >
+    <>
       <style>{`
+        :root {
+          --bg-primary: #f8fafc;
+          --bg-secondary: #ffffff;
+          --text-primary: #1f2937;
+          --text-secondary: #4b5563;
+          --text-tertiary: #6b7280;
+          --border-color: #e5e7eb;
+          --table-header-bg: #f3f4f6;
+          --table-row-even-bg: #f9fafb;
+          --input-bg: #ffffff;
+          --input-border: #d1d5db;
+          --input-text: #1f2937;
+          --input-placeholder: #9ca3af;
+          --button-primary: #2563eb;
+          --button-primary-hover: #1d4ed8;
+          --button-danger: #ef4444;
+          --button-danger-hover: #dc2626;
+          --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          --summary-bg: #f0f9ff;
+          --summary-border: #bfdbfe;
+          --summary-text: #1e40af;
+          --income-bg: #f0fdf4;
+          --income-border: #bbf7d0;
+          --income-text: #166534;
+          --theme-btn-border: #d1d5db;
+          --theme-btn-hover: #f3f4f6;
+          --theme-btn-text: #4b5563;
+        }
+
+        html[data-theme="dark"] {
+          --bg-primary: #0f172a;
+          --bg-secondary: #1e293b;
+          --text-primary: #f1f5f9;
+          --text-secondary: #cbd5e1;
+          --text-tertiary: #94a3b8;
+          --border-color: #334155;
+          --table-header-bg: #0f172a;
+          --table-row-even-bg: #1a2332;
+          --input-bg: #0f172a;
+          --input-border: #475569;
+          --input-text: #f1f5f9;
+          --input-placeholder: #64748b;
+          --button-primary: #3b82f6;
+          --button-primary-hover: #2563eb;
+          --button-danger: #ef4444;
+          --button-danger-hover: #dc2626;
+          --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+          --summary-bg: #0c2340;
+          --summary-border: #1e3a8a;
+          --summary-text: #93c5fd;
+          --income-bg: #0c2818;
+          --income-border: #166534;
+          --income-text: #86efac;
+          --theme-btn-border: #475569;
+          --theme-btn-hover: #1e293b;
+          --theme-btn-text: #cbd5e1;
+        }
+
         * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
         }
 
-        html, body {
+        html, body, #root {
           width: 100%;
           height: 100%;
         }
 
-        .light-bg {
-          background-color: #f8fafc;
-          color: #1f2937;
+        body {
+          background-color: var(--bg-primary);
+          color: var(--text-primary);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+          transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .dark-bg {
-          background-color: #0f172a;
-          color: #f1f5f9;
+        h1, h2, h3, h4, h5, h6 {
+          color: var(--text-primary);
+          transition: color 0.3s ease;
         }
 
-        .light-bg h1, .light-bg h2, .light-bg h3 {
-          color: #1f2937;
+        p {
+          color: var(--text-secondary);
+          transition: color 0.3s ease;
         }
 
-        .dark-bg h1, .dark-bg h2, .dark-bg h3 {
-          color: #f1f5f9;
+        .container {
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 2rem 1.5rem;
+          transition: all 0.3s ease;
         }
 
-        .light-bg p {
-          color: #4b5563;
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 2rem;
+          gap: 1rem;
         }
 
-        .dark-bg p {
-          color: #cbd5e1;
+        .header-content h1 {
+          font-size: 2.25rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
         }
 
-        .light-card {
-          background-color: #ffffff;
-          border-color: #e5e7eb;
-          color: #1f2937;
+        .header-content p {
+          font-size: 1rem;
+          line-height: 1.6;
         }
 
-        .dark-card {
-          background-color: #1e293b;
-          border-color: #334155;
-          color: #f1f5f9;
+        .theme-toggle {
+          padding: 0.75rem;
+          border: 1px solid var(--theme-btn-border);
+          background-color: var(--bg-secondary);
+          color: var(--theme-btn-text);
+          border-radius: 0.5rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+          flex-shrink: 0;
         }
 
-        .light-input {
-          background-color: #ffffff;
-          border-color: #d1d5db;
-          color: #1f2937;
+        .theme-toggle:hover {
+          background-color: var(--theme-btn-hover);
+          border-color: var(--button-primary);
         }
 
-        .light-input::placeholder {
-          color: #9ca3af;
+        .card {
+          background-color: var(--bg-secondary);
+          border: 1px solid var(--border-color);
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          margin-bottom: 1.5rem;
+          box-shadow: var(--card-shadow);
+          transition: all 0.3s ease;
         }
 
-        .dark-input {
-          background-color: #0f172a;
-          border-color: #475569;
-          color: #f1f5f9;
+        .card h2 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
         }
 
-        .dark-input::placeholder {
-          color: #64748b;
+        .form-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
+          margin-bottom: 1rem;
         }
 
-        .light-table {
-          background-color: #ffffff;
-          border-color: #e5e7eb;
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
 
-        .light-table th {
-          background-color: #f3f4f6;
-          color: #1f2937;
-        }
-
-        .light-table td {
-          color: #1f2937;
-          border-color: #e5e7eb;
-        }
-
-        .dark-table {
-          background-color: #1e293b;
-          border-color: #334155;
-        }
-
-        .dark-table th {
-          background-color: #0f172a;
-          color: #f1f5f9;
-        }
-
-        .dark-table td {
-          color: #f1f5f9;
-          border-color: #334155;
-        }
-
-        .light-btn {
-          background-color: #2563eb;
-          color: white;
-          border-color: #2563eb;
-        }
-
-        .light-btn:hover {
-          background-color: #1d4ed8;
-        }
-
-        .dark-btn {
-          background-color: #3b82f6;
-          color: white;
-          border-color: #3b82f6;
-        }
-
-        .dark-btn:hover {
-          background-color: #2563eb;
-        }
-
-        .light-summary {
-          background-color: #f0f9ff;
-          border-color: #bfdbfe;
-          color: #1e40af;
-        }
-
-        .dark-summary {
-          background-color: #0c2340;
-          border-color: #1e3a8a;
-          color: #93c5fd;
-        }
-
-        .light-income {
-          background-color: #f0fdf4;
-          border-color: #bbf7d0;
-          color: #166534;
-        }
-
-        .dark-income {
-          background-color: #0c2818;
-          border-color: #166534;
-          color: #86efac;
-        }
-
-        .light-balance {
-          background-color: #f0fdf4;
-          border-color: #bbf7d0;
-          color: #166534;
-        }
-
-        .dark-balance {
-          background-color: #0c2818;
-          border-color: #166534;
-          color: #86efac;
+        .form-group label {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--text-tertiary);
         }
 
         input, select {
           width: 100%;
-          padding: 8px 12px;
-          border: 1px solid;
-          border-radius: 8px;
-          font-size: 14px;
+          padding: 0.625rem 0.75rem;
+          border: 1px solid var(--input-border);
+          background-color: var(--input-bg);
+          color: var(--input-text);
+          border-radius: 0.5rem;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+        }
+
+        input::placeholder, select {
+          color: var(--input-placeholder);
+        }
+
+        input:focus, select:focus {
+          outline: none;
+          border-color: var(--button-primary);
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        html[data-theme="dark"] input:focus,
+        html[data-theme="dark"] select:focus {
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         button {
-          padding: 10px 16px;
+          padding: 0.625rem 1rem;
           border: none;
-          border-radius: 8px;
+          border-radius: 0.5rem;
           cursor: pointer;
           font-weight: 500;
-          transition: all 0.2s;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+          background-color: var(--button-primary);
+          color: white;
+          width: 100%;
+        }
+
+        .btn-primary:hover {
+          background-color: var(--button-primary-hover);
+        }
+
+        .btn-danger {
+          background-color: var(--button-danger);
+          color: white;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.875rem;
+          width: auto;
+        }
+
+        .btn-danger:hover {
+          background-color: var(--button-danger-hover);
+        }
+
+        .table-wrapper {
+          overflow-x: auto;
+          margin-top: 1rem;
         }
 
         table {
           width: 100%;
           border-collapse: collapse;
+          font-size: 0.95rem;
         }
 
-        th, td {
-          padding: 12px;
+        th {
+          background-color: var(--table-header-bg);
+          color: var(--text-primary);
+          padding: 0.75rem;
           text-align: left;
-          border: 1px solid;
+          font-weight: 600;
+          border: 1px solid var(--border-color);
+          transition: all 0.3s ease;
+        }
+
+        td {
+          padding: 0.75rem;
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
+          transition: all 0.3s ease;
+        }
+
+        tbody tr:nth-child(even) {
+          background-color: var(--table-row-even-bg);
+        }
+
+        tbody tr:hover {
+          background-color: var(--table-row-even-bg);
+        }
+
+        .summary-box {
+          background-color: var(--summary-bg);
+          border: 1px solid var(--summary-border);
+          color: var(--summary-text);
+          padding: 1rem;
+          border-radius: 0.5rem;
+          margin-top: 1rem;
+          transition: all 0.3s ease;
+        }
+
+        .summary-box div {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.5rem;
+        }
+
+        .summary-box div:last-child {
+          margin-bottom: 0;
+        }
+
+        .account-card {
+          background-color: var(--bg-secondary);
+          border: 1px solid var(--border-color);
+          border-radius: 0.5rem;
+          padding: 1rem;
+          transition: all 0.3s ease;
+        }
+
+        .account-card h3 {
+          margin: 0 0 0.5rem 0;
+          font-size: 1rem;
+          font-weight: 600;
+        }
+
+        .account-card .small {
+          font-size: 0.875rem;
+          font-weight: 400;
+        }
+
+        .account-card p {
+          margin: 0.25rem 0;
+          font-size: 0.875rem;
+        }
+
+        .grid-2 {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .income-card {
+          background-color: var(--income-bg);
+          border: 1px solid var(--income-border);
+          color: var(--income-text);
+          padding: 1.5rem;
+          border-radius: 0.75rem;
+          transition: all 0.3s ease;
+        }
+
+        .income-card h2 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+          color: var(--income-text);
+        }
+
+        .income-card .stat {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.75rem;
+          font-size: 0.95rem;
+        }
+
+        .income-card .stat:last-child {
+          margin-bottom: 0;
+        }
+
+        .income-card .divider {
+          border-top: 1px solid var(--income-border);
+          padding-top: 0.75rem;
+          margin-top: 0.75rem;
+          font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+          .container {
+            padding: 1rem;
+          }
+
+          .header {
+            flex-direction: column;
+          }
+
+          .header-content h1 {
+            font-size: 1.875rem;
+          }
+
+          .form-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .grid-2 {
+            grid-template-columns: 1fr;
+          }
+
+          table {
+            font-size: 0.85rem;
+          }
+
+          th, td {
+            padding: 0.5rem;
+          }
         }
       `}</style>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="container">
         {/* Header */}
-        <header className="flex justify-between items-start mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Contabilidad con Cuentas T</h1>
-            <p>
-              Registra cuentas, transacciones de débito y crédito, y observa los saldos en formato Cuenta T.
-            </p>
+        <header className="header">
+          <div className="header-content">
+            <h1>Contabilidad con Cuentas T</h1>
+            <p>Registra cuentas, transacciones de débito y crédito, y observa los saldos en formato Cuenta T.</p>
           </div>
           <button
             onClick={toggleTheme}
-            className={`p-2 rounded-lg border transition-colors ${
-              isDarkMode
-                ? 'border-slate-600 hover:bg-slate-800 text-yellow-400'
-                : 'border-gray-300 hover:bg-gray-100 text-gray-700'
-            }`}
+            className="theme-toggle"
+            title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           >
             {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
           </button>
         </header>
 
         {/* Add Account Section */}
-        <Card className={`p-6 mb-6 border rounded-lg ${
-          isDarkMode ? 'dark-card' : 'light-card'
-        }`}>
-          <h2 className="text-xl font-semibold mb-4">1. Agregar cuenta</h2>
-          <form onSubmit={handleAddAccount} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Nombre de la cuenta</label>
-              <input
-                type="text"
-                name="account-name"
-                required
-                placeholder="Caja, Ventas, Compras..."
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Tipo de cuenta</label>
-              <select
-                name="account-type"
-                required
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              >
-                <option value="">Selecciona un tipo</option>
-                <option value="Activo">Activo</option>
-                <option value="Pasivo">Pasivo</option>
-                <option value="Patrimonio">Patrimonio</option>
-                <option value="Ingreso">Ingreso</option>
-                <option value="Gasto">Gasto</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Saldo inicial</label>
-              <input
-                type="number"
-                name="account-balance"
-                min="0"
-                step="0.01"
-                defaultValue="0"
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Clasificación</label>
-              <select
-                name="account-cost-type"
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              >
-                <option value="Fijo">Fijo</option>
-                <option value="Variable">Variable</option>
-                <option value="Pasivo">Pasivo</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Moneda</label>
-              <select
-                name="account-currency"
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              >
-                <option value="MXN">MXN</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button type="submit" className={`w-full ${isDarkMode ? 'dark-btn' : 'light-btn'}`}>
-                Agregar cuenta
-              </button>
+        <div className="card">
+          <h2>1. Agregar cuenta</h2>
+          <form onSubmit={handleAddAccount}>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Nombre de la cuenta</label>
+                <input
+                  type="text"
+                  name="account-name"
+                  required
+                  placeholder="Caja, Ventas, Compras..."
+                />
+              </div>
+              <div className="form-group">
+                <label>Tipo de cuenta</label>
+                <select name="account-type" required>
+                  <option value="">Selecciona un tipo</option>
+                  <option value="Activo">Activo</option>
+                  <option value="Pasivo">Pasivo</option>
+                  <option value="Patrimonio">Patrimonio</option>
+                  <option value="Ingreso">Ingreso</option>
+                  <option value="Gasto">Gasto</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Saldo inicial</label>
+                <input
+                  type="number"
+                  name="account-balance"
+                  min="0"
+                  step="0.01"
+                  defaultValue="0"
+                />
+              </div>
+              <div className="form-group">
+                <label>Clasificación</label>
+                <select name="account-cost-type">
+                  <option value="Fijo">Fijo</option>
+                  <option value="Variable">Variable</option>
+                  <option value="Pasivo">Pasivo</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Moneda</label>
+                <select name="account-currency">
+                  <option value="MXN">MXN</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
+              <div className="form-group" style={{ justifyContent: 'flex-end' }}>
+                <button type="submit" className="btn-primary">Agregar cuenta</button>
+              </div>
             </div>
           </form>
-        </Card>
+        </div>
 
         {/* Accounts List */}
-        <Card className={`p-6 mb-6 border rounded-lg ${
-          isDarkMode ? 'dark-card' : 'light-card'
-        }`}>
-          <h2 className="text-xl font-semibold mb-4">2. Lista de cuentas</h2>
-          <div className="overflow-x-auto">
-            <table className={isDarkMode ? 'dark-table' : 'light-table'}>
+        <div className="card">
+          <h2>2. Lista de cuentas</h2>
+          <div className="table-wrapper">
+            <table>
               <thead>
                 <tr>
                   <th>Cuenta</th>
@@ -458,100 +628,77 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {accounts.map((acc, idx) => (
+                {accounts.map((acc) => (
                   <tr key={acc.id}>
                     <td>{acc.name}</td>
                     <td>{acc.type}</td>
                     <td>{acc.costType}</td>
-                    <td>
-                      {formatCurrency(Math.abs(computeBalance(acc)))} {acc.currency}
-                    </td>
+                    <td>{formatCurrency(Math.abs(computeBalance(acc)))} {acc.currency}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </Card>
+        </div>
 
         {/* Add Transaction */}
-        <Card className={`p-6 mb-6 border rounded-lg ${
-          isDarkMode ? 'dark-card' : 'light-card'
-        }`}>
-          <h2 className="text-xl font-semibold mb-4">3. Registrar transacción</h2>
-          <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Fecha</label>
-              <input
-                type="date"
-                name="transaction-date"
-                required
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Descripción</label>
-              <input
-                type="text"
-                name="transaction-description"
-                required
-                placeholder="Venta de productos"
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Cuenta</label>
-              <select
-                name="transaction-account"
-                required
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              >
-                <option value="">Seleccione cuenta</option>
-                {accounts.map(acc => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Movimiento</label>
-              <select
-                name="transaction-movement"
-                required
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              >
-                <option value="">Selecciona movimiento</option>
-                <option value="Entrada">Entrada (Débito)</option>
-                <option value="Salida">Salida (Crédito)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Monto</label>
-              <input
-                type="number"
-                name="transaction-amount"
-                min="0.01"
-                step="0.01"
-                required
-                defaultValue="0.00"
-                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
-              />
-            </div>
-            <div className="flex items-end">
-              <button type="submit" className={`w-full ${isDarkMode ? 'dark-btn' : 'light-btn'}`}>
-                Registrar transacción
-              </button>
+        <div className="card">
+          <h2>3. Registrar transacción</h2>
+          <form onSubmit={handleAddTransaction}>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Fecha</label>
+                <input type="date" name="transaction-date" required />
+              </div>
+              <div className="form-group">
+                <label>Descripción</label>
+                <input
+                  type="text"
+                  name="transaction-description"
+                  required
+                  placeholder="Venta de productos"
+                />
+              </div>
+              <div className="form-group">
+                <label>Cuenta</label>
+                <select name="transaction-account" required>
+                  <option value="">Seleccione cuenta</option>
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>{acc.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Movimiento</label>
+                <select name="transaction-movement" required>
+                  <option value="">Selecciona movimiento</option>
+                  <option value="Entrada">Entrada (Débito)</option>
+                  <option value="Salida">Salida (Crédito)</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Monto</label>
+                <input
+                  type="number"
+                  name="transaction-amount"
+                  min="0.01"
+                  step="0.01"
+                  required
+                  defaultValue="0.00"
+                />
+              </div>
+              <div className="form-group" style={{ justifyContent: 'flex-end' }}>
+                <button type="submit" className="btn-primary">Registrar transacción</button>
+              </div>
             </div>
           </form>
-        </Card>
+        </div>
 
         {/* Transactions List */}
-        <Card className={`p-6 mb-6 border rounded-lg ${
-          isDarkMode ? 'dark-card' : 'light-card'
-        }`}>
-          <h2 className="text-xl font-semibold mb-4">4. Transacciones registradas</h2>
-          <div className="overflow-x-auto">
-            <table className={isDarkMode ? 'dark-table' : 'light-table'}>
+        <div className="card">
+          <h2>4. Transacciones registradas</h2>
+          <div className="table-wrapper">
+            <table>
               <thead>
                 <tr>
                   <th>Fecha</th>
@@ -573,7 +720,7 @@ export default function Home() {
                     <td>
                       <button
                         onClick={() => removeTransaction(tx.id)}
-                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
+                        className="btn-danger"
                       >
                         Eliminar
                       </button>
@@ -583,102 +730,75 @@ export default function Home() {
               </tbody>
             </table>
           </div>
-        </Card>
+        </div>
 
         {/* Summary */}
-        <Card className={`p-6 mb-6 border rounded-lg ${
-          isDarkMode ? 'dark-card' : 'light-card'
-        }`}>
-          <h2 className="text-xl font-semibold mb-4">5. Resumen de Cuentas T</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="card">
+          <h2>5. Resumen de Cuentas T</h2>
+          <div className="grid-2">
             {accounts.map(acc => (
-              <div
-                key={acc.id}
-                className={`p-4 border rounded-lg ${
-                  isDarkMode ? 'dark-card' : 'light-card'
-                }`}
-              >
-                <div className="font-semibold mb-2">
-                  {acc.name} <span className="text-sm font-normal">({acc.type})</span>
-                </div>
-                <div className="text-sm">
-                  <div>Saldo: {formatCurrency(Math.abs(computeBalance(acc)))}</div>
-                  <div>Clasificación: {acc.costType}</div>
-                </div>
+              <div key={acc.id} className="account-card">
+                <h3>
+                  {acc.name} <span className="small">({acc.type})</span>
+                </h3>
+                <p><strong>Saldo:</strong> {formatCurrency(Math.abs(computeBalance(acc)))}</p>
+                <p><strong>Clasificación:</strong> {acc.costType}</p>
               </div>
             ))}
           </div>
-          <div className={`p-4 rounded-lg border ${
-            isDarkMode ? 'dark-summary' : 'light-summary'
-          }`}>
-            <div className="flex justify-between mb-2">
+          <div className="summary-box">
+            <div>
               <strong>Total Débito:</strong>
               <span>{formatCurrency(totalDebits)}</span>
             </div>
-            <div className="flex justify-between">
+            <div>
               <strong>Total Crédito:</strong>
               <span>{formatCurrency(totalCredits)}</span>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Financial Statements */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid-2">
           {/* Income Statement */}
-          <Card className={`p-6 border rounded-lg ${
-            isDarkMode ? 'dark-income' : 'light-income'
-          }`}>
-            <h2 className="text-xl font-semibold mb-4">
-              Estado de Resultados
-            </h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Ingresos:</span>
-                <span>{formatCurrency(income)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Gastos:</span>
-                <span>{formatCurrency(expenses)}</span>
-              </div>
-              <div className={`border-t pt-2 mt-2 flex justify-between font-semibold ${
-                isDarkMode ? 'border-green-700' : 'border-green-300'
-              }`}>
-                <span>Utilidad / Pérdida:</span>
-                <span>{formatCurrency(netIncome)}</span>
-              </div>
+          <div className="income-card">
+            <h2>Estado de Resultados</h2>
+            <div className="stat">
+              <span>Ingresos:</span>
+              <span>{formatCurrency(income)}</span>
             </div>
-          </Card>
+            <div className="stat">
+              <span>Gastos:</span>
+              <span>{formatCurrency(expenses)}</span>
+            </div>
+            <div className="stat divider">
+              <span>Utilidad / Pérdida:</span>
+              <span>{formatCurrency(netIncome)}</span>
+            </div>
+          </div>
 
           {/* Balance Sheet */}
-          <Card className={`p-6 border rounded-lg ${
-            isDarkMode ? 'dark-balance' : 'light-balance'
-          }`}>
-            <h2 className="text-xl font-semibold mb-4">
-              Balance General
-            </h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Activos:</span>
-                <span>{formatCurrency(assets)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Pasivos:</span>
-                <span>{formatCurrency(liabilities)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Patrimonio:</span>
-                <span>{formatCurrency(equity)}</span>
-              </div>
-              <div className={`border-t pt-2 mt-2 flex justify-between font-semibold ${
-                isDarkMode ? 'border-green-700' : 'border-green-300'
-              }`}>
-                <span>Pasivos + Patrimonio:</span>
-                <span>{formatCurrency(liabilities + equity)}</span>
-              </div>
+          <div className="income-card">
+            <h2>Balance General</h2>
+            <div className="stat">
+              <span>Activos:</span>
+              <span>{formatCurrency(assets)}</span>
             </div>
-          </Card>
+            <div className="stat">
+              <span>Pasivos:</span>
+              <span>{formatCurrency(liabilities)}</span>
+            </div>
+            <div className="stat">
+              <span>Patrimonio:</span>
+              <span>{formatCurrency(equity)}</span>
+            </div>
+            <div className="stat divider">
+              <span>Pasivos + Patrimonio:</span>
+              <span>{formatCurrency(liabilities + equity)}</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
