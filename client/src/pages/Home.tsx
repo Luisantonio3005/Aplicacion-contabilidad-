@@ -29,24 +29,16 @@ export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Load theme from localStorage
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
-      document.documentElement.classList.add('dark-mode');
     }
   }, []);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark-mode');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark-mode');
-      localStorage.setItem('theme', 'light');
-    }
+    localStorage.setItem('theme', !isDarkMode ? 'dark' : 'light');
   };
 
   const formatCurrency = (value: number) => {
@@ -108,7 +100,6 @@ export default function Home() {
 
     setTransactions([...transactions, newTransaction]);
 
-    // Update account debits/credits
     const updatedAccounts = accounts.map(acc => {
       if (acc.id === accountId) {
         if (movement === 'Entrada') {
@@ -142,7 +133,6 @@ export default function Home() {
     setAccounts(updatedAccounts);
   };
 
-  // Calculations
   const totalDebits = transactions
     .filter(t => t.movement === 'Entrada')
     .reduce((s, t) => s + t.amount, 0);
@@ -169,48 +159,193 @@ export default function Home() {
     .reduce((s, a) => s + computeBalance(a) * -1, 0) + netIncome;
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div
+      className={`min-h-screen transition-all duration-300 ${
+        isDarkMode ? 'dark-bg' : 'light-bg'
+      }`}
+    >
       <style>{`
-        :root {
-          --bg-primary: #f8fafc;
-          --bg-secondary: #ffffff;
-          --text-primary: #1f2937;
-          --text-secondary: #4b5563;
-          --text-tertiary: #374151;
-          --border-color: #e5e7eb;
-          --table-header-bg: #f3f4f6;
-          --table-row-even-bg: #f8fafc;
-          --shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
-          --button-bg: #2563eb;
-          --button-hover: #1d4ed8;
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
         }
 
-        body.dark-mode {
-          --bg-primary: #0f172a;
-          --bg-secondary: #1e293b;
-          --text-primary: #f1f5f9;
-          --text-secondary: #cbd5e1;
-          --text-tertiary: #94a3b8;
-          --border-color: #334155;
-          --table-header-bg: #1e293b;
-          --table-row-even-bg: #0f172a;
-          --shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-          --button-bg: #3b82f6;
-          --button-hover: #2563eb;
+        html, body {
+          width: 100%;
+          height: 100%;
         }
 
-        html.dark-mode {
-          background-color: var(--bg-primary);
-          color: var(--text-primary);
+        .light-bg {
+          background-color: #f8fafc;
+          color: #1f2937;
         }
 
-        body.dark-mode {
-          background-color: var(--bg-primary);
-          color: var(--text-primary);
+        .dark-bg {
+          background-color: #0f172a;
+          color: #f1f5f9;
         }
 
-        .dark-mode h2 {
-          color: var(--text-primary);
+        .light-bg h1, .light-bg h2, .light-bg h3 {
+          color: #1f2937;
+        }
+
+        .dark-bg h1, .dark-bg h2, .dark-bg h3 {
+          color: #f1f5f9;
+        }
+
+        .light-bg p {
+          color: #4b5563;
+        }
+
+        .dark-bg p {
+          color: #cbd5e1;
+        }
+
+        .light-card {
+          background-color: #ffffff;
+          border-color: #e5e7eb;
+          color: #1f2937;
+        }
+
+        .dark-card {
+          background-color: #1e293b;
+          border-color: #334155;
+          color: #f1f5f9;
+        }
+
+        .light-input {
+          background-color: #ffffff;
+          border-color: #d1d5db;
+          color: #1f2937;
+        }
+
+        .light-input::placeholder {
+          color: #9ca3af;
+        }
+
+        .dark-input {
+          background-color: #0f172a;
+          border-color: #475569;
+          color: #f1f5f9;
+        }
+
+        .dark-input::placeholder {
+          color: #64748b;
+        }
+
+        .light-table {
+          background-color: #ffffff;
+          border-color: #e5e7eb;
+        }
+
+        .light-table th {
+          background-color: #f3f4f6;
+          color: #1f2937;
+        }
+
+        .light-table td {
+          color: #1f2937;
+          border-color: #e5e7eb;
+        }
+
+        .dark-table {
+          background-color: #1e293b;
+          border-color: #334155;
+        }
+
+        .dark-table th {
+          background-color: #0f172a;
+          color: #f1f5f9;
+        }
+
+        .dark-table td {
+          color: #f1f5f9;
+          border-color: #334155;
+        }
+
+        .light-btn {
+          background-color: #2563eb;
+          color: white;
+          border-color: #2563eb;
+        }
+
+        .light-btn:hover {
+          background-color: #1d4ed8;
+        }
+
+        .dark-btn {
+          background-color: #3b82f6;
+          color: white;
+          border-color: #3b82f6;
+        }
+
+        .dark-btn:hover {
+          background-color: #2563eb;
+        }
+
+        .light-summary {
+          background-color: #f0f9ff;
+          border-color: #bfdbfe;
+          color: #1e40af;
+        }
+
+        .dark-summary {
+          background-color: #0c2340;
+          border-color: #1e3a8a;
+          color: #93c5fd;
+        }
+
+        .light-income {
+          background-color: #f0fdf4;
+          border-color: #bbf7d0;
+          color: #166534;
+        }
+
+        .dark-income {
+          background-color: #0c2818;
+          border-color: #166534;
+          color: #86efac;
+        }
+
+        .light-balance {
+          background-color: #f0fdf4;
+          border-color: #bbf7d0;
+          color: #166534;
+        }
+
+        .dark-balance {
+          background-color: #0c2818;
+          border-color: #166534;
+          color: #86efac;
+        }
+
+        input, select {
+          width: 100%;
+          padding: 8px 12px;
+          border: 1px solid;
+          border-radius: 8px;
+          font-size: 14px;
+        }
+
+        button {
+          padding: 10px 16px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 500;
+          transition: all 0.2s;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        th, td {
+          padding: 12px;
+          text-align: left;
+          border: 1px solid;
         }
       `}</style>
 
@@ -219,20 +354,26 @@ export default function Home() {
         <header className="flex justify-between items-start mb-8">
           <div>
             <h1 className="text-4xl font-bold mb-2">Contabilidad con Cuentas T</h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p>
               Registra cuentas, transacciones de débito y crédito, y observa los saldos en formato Cuenta T.
             </p>
           </div>
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className={`p-2 rounded-lg border transition-colors ${
+              isDarkMode
+                ? 'border-slate-600 hover:bg-slate-800 text-yellow-400'
+                : 'border-gray-300 hover:bg-gray-100 text-gray-700'
+            }`}
           >
             {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
           </button>
         </header>
 
         {/* Add Account Section */}
-        <Card className="p-6 mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <Card className={`p-6 mb-6 border rounded-lg ${
+          isDarkMode ? 'dark-card' : 'light-card'
+        }`}>
           <h2 className="text-xl font-semibold mb-4">1. Agregar cuenta</h2>
           <form onSubmit={handleAddAccount} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -242,7 +383,7 @@ export default function Home() {
                 name="account-name"
                 required
                 placeholder="Caja, Ventas, Compras..."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               />
             </div>
             <div>
@@ -250,7 +391,7 @@ export default function Home() {
               <select
                 name="account-type"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               >
                 <option value="">Selecciona un tipo</option>
                 <option value="Activo">Activo</option>
@@ -268,14 +409,14 @@ export default function Home() {
                 min="0"
                 step="0.01"
                 defaultValue="0"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Clasificación</label>
               <select
                 name="account-cost-type"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               >
                 <option value="Fijo">Fijo</option>
                 <option value="Variable">Variable</option>
@@ -286,7 +427,7 @@ export default function Home() {
               <label className="block text-sm font-medium mb-2">Moneda</label>
               <select
                 name="account-currency"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               >
                 <option value="MXN">MXN</option>
                 <option value="USD">USD</option>
@@ -294,38 +435,35 @@ export default function Home() {
               </select>
             </div>
             <div className="flex items-end">
-              <Button type="submit" className="w-full">
+              <button type="submit" className={`w-full ${isDarkMode ? 'dark-btn' : 'light-btn'}`}>
                 Agregar cuenta
-              </Button>
+              </button>
             </div>
           </form>
         </Card>
 
         {/* Accounts List */}
-        <Card className="p-6 mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <Card className={`p-6 mb-6 border rounded-lg ${
+          isDarkMode ? 'dark-card' : 'light-card'
+        }`}>
           <h2 className="text-xl font-semibold mb-4">2. Lista de cuentas</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className={isDarkMode ? 'dark-table' : 'light-table'}>
               <thead>
-                <tr className="border-b border-gray-300 dark:border-gray-600">
-                  <th className="text-left py-2 px-4 font-semibold">Cuenta</th>
-                  <th className="text-left py-2 px-4 font-semibold">Tipo</th>
-                  <th className="text-left py-2 px-4 font-semibold">Clasificación</th>
-                  <th className="text-left py-2 px-4 font-semibold">Saldo</th>
+                <tr>
+                  <th>Cuenta</th>
+                  <th>Tipo</th>
+                  <th>Clasificación</th>
+                  <th>Saldo</th>
                 </tr>
               </thead>
               <tbody>
                 {accounts.map((acc, idx) => (
-                  <tr
-                    key={acc.id}
-                    className={`border-b border-gray-200 dark:border-gray-700 ${
-                      idx % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900' : ''
-                    }`}
-                  >
-                    <td className="py-2 px-4">{acc.name}</td>
-                    <td className="py-2 px-4">{acc.type}</td>
-                    <td className="py-2 px-4">{acc.costType}</td>
-                    <td className="py-2 px-4">
+                  <tr key={acc.id}>
+                    <td>{acc.name}</td>
+                    <td>{acc.type}</td>
+                    <td>{acc.costType}</td>
+                    <td>
                       {formatCurrency(Math.abs(computeBalance(acc)))} {acc.currency}
                     </td>
                   </tr>
@@ -336,7 +474,9 @@ export default function Home() {
         </Card>
 
         {/* Add Transaction */}
-        <Card className="p-6 mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <Card className={`p-6 mb-6 border rounded-lg ${
+          isDarkMode ? 'dark-card' : 'light-card'
+        }`}>
           <h2 className="text-xl font-semibold mb-4">3. Registrar transacción</h2>
           <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -345,7 +485,7 @@ export default function Home() {
                 type="date"
                 name="transaction-date"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               />
             </div>
             <div>
@@ -355,7 +495,7 @@ export default function Home() {
                 name="transaction-description"
                 required
                 placeholder="Venta de productos"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               />
             </div>
             <div>
@@ -363,7 +503,7 @@ export default function Home() {
               <select
                 name="transaction-account"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               >
                 <option value="">Seleccione cuenta</option>
                 {accounts.map(acc => (
@@ -378,7 +518,7 @@ export default function Home() {
               <select
                 name="transaction-movement"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               >
                 <option value="">Selecciona movimiento</option>
                 <option value="Entrada">Entrada (Débito)</option>
@@ -394,46 +534,43 @@ export default function Home() {
                 step="0.01"
                 required
                 defaultValue="0.00"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`${isDarkMode ? 'dark-input' : 'light-input'}`}
               />
             </div>
             <div className="flex items-end">
-              <Button type="submit" className="w-full">
+              <button type="submit" className={`w-full ${isDarkMode ? 'dark-btn' : 'light-btn'}`}>
                 Registrar transacción
-              </Button>
+              </button>
             </div>
           </form>
         </Card>
 
         {/* Transactions List */}
-        <Card className="p-6 mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <Card className={`p-6 mb-6 border rounded-lg ${
+          isDarkMode ? 'dark-card' : 'light-card'
+        }`}>
           <h2 className="text-xl font-semibold mb-4">4. Transacciones registradas</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className={isDarkMode ? 'dark-table' : 'light-table'}>
               <thead>
-                <tr className="border-b border-gray-300 dark:border-gray-600">
-                  <th className="text-left py-2 px-4 font-semibold">Fecha</th>
-                  <th className="text-left py-2 px-4 font-semibold">Descripción</th>
-                  <th className="text-left py-2 px-4 font-semibold">Cuenta</th>
-                  <th className="text-left py-2 px-4 font-semibold">Movimiento</th>
-                  <th className="text-left py-2 px-4 font-semibold">Monto</th>
-                  <th className="text-left py-2 px-4 font-semibold">Acciones</th>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Descripción</th>
+                  <th>Cuenta</th>
+                  <th>Movimiento</th>
+                  <th>Monto</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((tx, idx) => (
-                  <tr
-                    key={tx.id}
-                    className={`border-b border-gray-200 dark:border-gray-700 ${
-                      idx % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900' : ''
-                    }`}
-                  >
-                    <td className="py-2 px-4">{tx.date}</td>
-                    <td className="py-2 px-4">{tx.description}</td>
-                    <td className="py-2 px-4">{tx.accountName}</td>
-                    <td className="py-2 px-4">{tx.movement}</td>
-                    <td className="py-2 px-4">{formatCurrency(tx.amount)}</td>
-                    <td className="py-2 px-4">
+                {transactions.map((tx) => (
+                  <tr key={tx.id}>
+                    <td>{tx.date}</td>
+                    <td>{tx.description}</td>
+                    <td>{tx.accountName}</td>
+                    <td>{tx.movement}</td>
+                    <td>{formatCurrency(tx.amount)}</td>
+                    <td>
                       <button
                         onClick={() => removeTransaction(tx.id)}
                         className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
@@ -449,13 +586,17 @@ export default function Home() {
         </Card>
 
         {/* Summary */}
-        <Card className="p-6 mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <Card className={`p-6 mb-6 border rounded-lg ${
+          isDarkMode ? 'dark-card' : 'light-card'
+        }`}>
           <h2 className="text-xl font-semibold mb-4">5. Resumen de Cuentas T</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {accounts.map(acc => (
               <div
                 key={acc.id}
-                className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg"
+                className={`p-4 border rounded-lg ${
+                  isDarkMode ? 'dark-card' : 'light-card'
+                }`}
               >
                 <div className="font-semibold mb-2">
                   {acc.name} <span className="text-sm font-normal">({acc.type})</span>
@@ -467,7 +608,9 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+          <div className={`p-4 rounded-lg border ${
+            isDarkMode ? 'dark-summary' : 'light-summary'
+          }`}>
             <div className="flex justify-between mb-2">
               <strong>Total Débito:</strong>
               <span>{formatCurrency(totalDebits)}</span>
@@ -482,8 +625,10 @@ export default function Home() {
         {/* Financial Statements */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Income Statement */}
-          <Card className="p-6 bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800">
-            <h2 className="text-xl font-semibold mb-4 text-blue-900 dark:text-blue-100">
+          <Card className={`p-6 border rounded-lg ${
+            isDarkMode ? 'dark-income' : 'light-income'
+          }`}>
+            <h2 className="text-xl font-semibold mb-4">
               Estado de Resultados
             </h2>
             <div className="space-y-2 text-sm">
@@ -495,7 +640,9 @@ export default function Home() {
                 <span>Gastos:</span>
                 <span>{formatCurrency(expenses)}</span>
               </div>
-              <div className="border-t border-blue-300 dark:border-blue-700 pt-2 mt-2 flex justify-between font-semibold">
+              <div className={`border-t pt-2 mt-2 flex justify-between font-semibold ${
+                isDarkMode ? 'border-green-700' : 'border-green-300'
+              }`}>
                 <span>Utilidad / Pérdida:</span>
                 <span>{formatCurrency(netIncome)}</span>
               </div>
@@ -503,8 +650,10 @@ export default function Home() {
           </Card>
 
           {/* Balance Sheet */}
-          <Card className="p-6 bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800">
-            <h2 className="text-xl font-semibold mb-4 text-green-900 dark:text-green-100">
+          <Card className={`p-6 border rounded-lg ${
+            isDarkMode ? 'dark-balance' : 'light-balance'
+          }`}>
+            <h2 className="text-xl font-semibold mb-4">
               Balance General
             </h2>
             <div className="space-y-2 text-sm">
@@ -520,7 +669,9 @@ export default function Home() {
                 <span>Patrimonio:</span>
                 <span>{formatCurrency(equity)}</span>
               </div>
-              <div className="border-t border-green-300 dark:border-green-700 pt-2 mt-2 flex justify-between font-semibold">
+              <div className={`border-t pt-2 mt-2 flex justify-between font-semibold ${
+                isDarkMode ? 'border-green-700' : 'border-green-300'
+              }`}>
                 <span>Pasivos + Patrimonio:</span>
                 <span>{formatCurrency(liabilities + equity)}</span>
               </div>
