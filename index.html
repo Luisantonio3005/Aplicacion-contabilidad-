@@ -71,7 +71,7 @@
       box-sizing: border-box;
     }
 
-    html, body, #root {
+    html, body {
       width: 100%;
       height: 100%;
     }
@@ -81,6 +81,7 @@
       color: var(--text-primary);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       transition: background-color 0.3s ease, color 0.3s ease;
+      line-height: 1.6;
     }
 
     h1, h2, h3, h4, h5, h6 {
@@ -97,7 +98,6 @@
       max-width: 1280px;
       margin: 0 auto;
       padding: 2rem 1.5rem;
-      transition: all 0.3s ease;
     }
 
     .header {
@@ -132,11 +132,14 @@
       transition: all 0.3s ease;
       flex-shrink: 0;
       font-size: 1.5rem;
+      width: 48px;
+      height: 48px;
     }
 
     .theme-toggle:hover {
       background-color: var(--theme-btn-hover);
       border-color: var(--button-primary);
+      transform: scale(1.05);
     }
 
     .card {
@@ -153,13 +156,13 @@
       font-size: 1.25rem;
       font-weight: 600;
       margin-bottom: 1rem;
+      color: var(--text-primary);
     }
 
     .form-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
-      margin-bottom: 1rem;
     }
 
     .form-group {
@@ -183,9 +186,10 @@
       border-radius: 0.5rem;
       font-size: 0.95rem;
       transition: all 0.3s ease;
+      font-family: inherit;
     }
 
-    input::placeholder, select {
+    input::placeholder {
       color: var(--input-placeholder);
     }
 
@@ -208,6 +212,7 @@
       font-weight: 500;
       font-size: 0.95rem;
       transition: all 0.3s ease;
+      font-family: inherit;
     }
 
     .btn-primary {
@@ -218,6 +223,12 @@
 
     .btn-primary:hover {
       background-color: var(--button-primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
     }
 
     .btn-danger {
@@ -230,11 +241,14 @@
 
     .btn-danger:hover {
       background-color: var(--button-danger-hover);
+      transform: translateY(-1px);
     }
 
     .table-wrapper {
       overflow-x: auto;
       margin-top: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
     }
 
     table {
@@ -249,15 +263,13 @@
       padding: 0.75rem;
       text-align: left;
       font-weight: 600;
-      border: 1px solid var(--border-color);
-      transition: all 0.3s ease;
+      border-bottom: 2px solid var(--border-color);
     }
 
     td {
       padding: 0.75rem;
-      border: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
       color: var(--text-primary);
-      transition: all 0.3s ease;
     }
 
     tbody tr:nth-child(even) {
@@ -266,6 +278,12 @@
 
     tbody tr:hover {
       background-color: var(--table-row-even-bg);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
     }
 
     .summary-box {
@@ -282,6 +300,7 @@
       display: flex;
       justify-content: space-between;
       margin-bottom: 0.5rem;
+      font-weight: 500;
     }
 
     .summary-box div:last-child {
@@ -296,20 +315,28 @@
       transition: all 0.3s ease;
     }
 
+    .account-card:hover {
+      box-shadow: var(--card-shadow);
+      transform: translateY(-2px);
+    }
+
     .account-card h3 {
       margin: 0 0 0.5rem 0;
       font-size: 1rem;
       font-weight: 600;
+      color: var(--text-primary);
     }
 
     .account-card .small {
       font-size: 0.875rem;
       font-weight: 400;
+      color: var(--text-secondary);
     }
 
     .account-card p {
       margin: 0.25rem 0;
       font-size: 0.875rem;
+      color: var(--text-secondary);
     }
 
     .grid-2 {
@@ -352,6 +379,21 @@
       font-weight: 600;
     }
 
+    .error-message {
+      background-color: #fee2e2;
+      color: #991b1b;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #dc2626;
+    }
+
+    html[data-theme="dark"] .error-message {
+      background-color: #7f1d1d;
+      color: #fecaca;
+      border-left-color: #ef4444;
+    }
+
     @media (max-width: 768px) {
       .container {
         padding: 1rem;
@@ -390,7 +432,7 @@
         <h1>Contabilidad con Cuentas T</h1>
         <p>Registra cuentas, transacciones de débito y crédito, y observa los saldos en formato Cuenta T.</p>
       </div>
-      <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙</button>
+      <button class="theme-toggle" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
     </header>
 
     <!-- Add Account Section -->
@@ -399,12 +441,12 @@
       <form id="accountForm">
         <div class="form-grid">
           <div class="form-group">
-            <label>Nombre de la cuenta</label>
-            <input type="text" name="account-name" required placeholder="Caja, Ventas, Compras..." />
+            <label for="accountName">Nombre de la cuenta</label>
+            <input type="text" id="accountName" name="account-name" required placeholder="Caja, Ventas, Compras..." />
           </div>
           <div class="form-group">
-            <label>Tipo de cuenta</label>
-            <select name="account-type" required>
+            <label for="accountType">Tipo de cuenta</label>
+            <select id="accountType" name="account-type" required>
               <option value="">Selecciona un tipo</option>
               <option value="Activo">Activo</option>
               <option value="Pasivo">Pasivo</option>
@@ -414,20 +456,20 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Saldo inicial</label>
-            <input type="number" name="account-balance" min="0" step="0.01" value="0" />
+            <label for="accountBalance">Saldo inicial</label>
+            <input type="number" id="accountBalance" name="account-balance" min="0" step="0.01" value="0" />
           </div>
           <div class="form-group">
-            <label>Clasificación</label>
-            <select name="account-cost-type">
+            <label for="accountCostType">Clasificación</label>
+            <select id="accountCostType" name="account-cost-type">
               <option value="Fijo">Fijo</option>
               <option value="Variable">Variable</option>
               <option value="Pasivo">Pasivo</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Moneda</label>
-            <select name="account-currency">
+            <label for="accountCurrency">Moneda</label>
+            <select id="accountCurrency" name="account-currency">
               <option value="MXN">MXN</option>
               <option value="USD">USD</option>
               <option value="EUR">EUR</option>
@@ -453,7 +495,11 @@
               <th>Saldo</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <tr>
+              <td colspan="4" class="empty-state">No hay cuentas registradas</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -464,30 +510,30 @@
       <form id="transactionForm">
         <div class="form-grid">
           <div class="form-group">
-            <label>Fecha</label>
-            <input type="date" name="transaction-date" required />
+            <label for="transactionDate">Fecha</label>
+            <input type="date" id="transactionDate" name="transaction-date" required />
           </div>
           <div class="form-group">
-            <label>Descripción</label>
-            <input type="text" name="transaction-description" required placeholder="Venta de productos" />
+            <label for="transactionDescription">Descripción</label>
+            <input type="text" id="transactionDescription" name="transaction-description" required placeholder="Venta de productos" />
           </div>
           <div class="form-group">
-            <label>Cuenta</label>
-            <select name="transaction-account" id="transactionAccountSelect" required>
+            <label for="transactionAccountSelect">Cuenta</label>
+            <select id="transactionAccountSelect" name="transaction-account" required>
               <option value="">Seleccione cuenta</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Movimiento</label>
-            <select name="transaction-movement" required>
+            <label for="transactionMovement">Movimiento</label>
+            <select id="transactionMovement" name="transaction-movement" required>
               <option value="">Selecciona movimiento</option>
               <option value="Entrada">Entrada (Débito)</option>
               <option value="Salida">Salida (Crédito)</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Monto</label>
-            <input type="number" name="transaction-amount" min="0.01" step="0.01" required value="0.00" />
+            <label for="transactionAmount">Monto</label>
+            <input type="number" id="transactionAmount" name="transaction-amount" min="0.01" step="0.01" required value="0.00" />
           </div>
           <div class="form-group" style="justify-content: flex-end;">
             <button type="submit" class="btn-primary">Registrar transacción</button>
@@ -511,7 +557,11 @@
               <th>Acciones</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <tr>
+              <td colspan="6" class="empty-state">No hay transacciones registradas</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -573,10 +623,12 @@
   </div>
 
   <script>
+    // State management
     let accounts = [];
     let transactions = [];
     let isDarkMode = false;
 
+    // Utility functions
     const formatCurrency = (value) => {
       return Number(value).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
@@ -594,6 +646,7 @@
       return debits - credits;
     };
 
+    // Theme management
     const toggleTheme = () => {
       isDarkMode = !isDarkMode;
       localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
@@ -601,6 +654,18 @@
       document.getElementById('themeToggle').textContent = isDarkMode ? '☀️' : '🌙';
     };
 
+    const initializeTheme = () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        isDarkMode = true;
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeToggle').textContent = '☀️';
+      } else {
+        document.getElementById('themeToggle').textContent = '🌙';
+      }
+    };
+
+    // UI update functions
     const updateAccountOptions = () => {
       const select = document.getElementById('transactionAccountSelect');
       select.innerHTML = '<option value="">Seleccione cuenta</option>' +
@@ -610,37 +675,49 @@
     const refreshUI = () => {
       // Accounts table
       const accountsBody = document.querySelector('#accountsTable tbody');
-      accountsBody.innerHTML = accounts.map(acc => `
-        <tr>
-          <td>${acc.name}</td>
-          <td>${acc.type}</td>
-          <td>${acc.costType}</td>
-          <td>${formatCurrency(Math.abs(computeBalance(acc)))} ${acc.currency}</td>
-        </tr>
-      `).join('');
+      if (accounts.length === 0) {
+        accountsBody.innerHTML = '<tr><td colspan="4" class="empty-state">No hay cuentas registradas</td></tr>';
+      } else {
+        accountsBody.innerHTML = accounts.map(acc => `
+          <tr>
+            <td>${acc.name}</td>
+            <td>${acc.type}</td>
+            <td>${acc.costType}</td>
+            <td>${formatCurrency(Math.abs(computeBalance(acc)))} ${acc.currency}</td>
+          </tr>
+        `).join('');
+      }
 
       // Transactions table
       const transactionsBody = document.querySelector('#transactionsTable tbody');
-      transactionsBody.innerHTML = transactions.map(tx => `
-        <tr>
-          <td>${tx.date}</td>
-          <td>${tx.description}</td>
-          <td>${tx.accountName}</td>
-          <td>${tx.movement}</td>
-          <td>${formatCurrency(tx.amount)}</td>
-          <td><button class="btn-danger" onclick="removeTransaction('${tx.id}')">Eliminar</button></td>
-        </tr>
-      `).join('');
+      if (transactions.length === 0) {
+        transactionsBody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay transacciones registradas</td></tr>';
+      } else {
+        transactionsBody.innerHTML = transactions.map(tx => `
+          <tr>
+            <td>${tx.date}</td>
+            <td>${tx.description}</td>
+            <td>${tx.accountName}</td>
+            <td>${tx.movement}</td>
+            <td>${formatCurrency(tx.amount)}</td>
+            <td><button class="btn-danger" onclick="removeTransaction('${tx.id}')">Eliminar</button></td>
+          </tr>
+        `).join('');
+      }
 
       // Accounts grid
       const grid = document.getElementById('accountsGrid');
-      grid.innerHTML = accounts.map(acc => `
-        <div class="account-card">
-          <h3>${acc.name} <span class="small">(${acc.type})</span></h3>
-          <p><strong>Saldo:</strong> ${formatCurrency(Math.abs(computeBalance(acc)))}</p>
-          <p><strong>Clasificación:</strong> ${acc.costType}</p>
-        </div>
-      `).join('');
+      if (accounts.length === 0) {
+        grid.innerHTML = '<div class="empty-state">Agrega cuentas para verlas aquí</div>';
+      } else {
+        grid.innerHTML = accounts.map(acc => `
+          <div class="account-card">
+            <h3>${acc.name} <span class="small">(${acc.type})</span></h3>
+            <p><strong>Saldo:</strong> ${formatCurrency(Math.abs(computeBalance(acc)))}</p>
+            <p><strong>Clasificación:</strong> ${acc.costType}</p>
+          </div>
+        `).join('');
+      }
 
       // Totals
       const totalDebits = transactions.filter(t => t.movement === 'Entrada').reduce((s, t) => s + t.amount, 0);
@@ -665,8 +742,13 @@
       document.getElementById('liabilities').textContent = formatCurrency(liabilities);
       document.getElementById('equity').textContent = formatCurrency(equity);
       document.getElementById('totalLiabilitiesEquity').textContent = formatCurrency(liabilities + equity);
+
+      // Save to localStorage
+      localStorage.setItem('accounts', JSON.stringify(accounts));
+      localStorage.setItem('transactions', JSON.stringify(transactions));
     };
 
+    // Transaction management
     const removeTransaction = (id) => {
       const transaction = transactions.find(t => t.id === id);
       if (!transaction) return;
@@ -683,19 +765,28 @@
       refreshUI();
     };
 
+    // Event listeners
     document.getElementById('accountForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
-      accounts.push({
+      
+      const newAccount = {
         id: Math.random().toString(36).substr(2, 9),
-        name: formData.get('account-name'),
+        name: formData.get('account-name').trim(),
         type: formData.get('account-type'),
         costType: formData.get('account-cost-type'),
         initialBalance: Number(formData.get('account-balance')) || 0,
         currency: formData.get('account-currency'),
         debits: [],
         credits: []
-      });
+      };
+
+      if (!newAccount.name) {
+        alert('Por favor ingresa un nombre para la cuenta');
+        return;
+      }
+
+      accounts.push(newAccount);
       e.target.reset();
       updateAccountOptions();
       refreshUI();
@@ -706,20 +797,30 @@
       const formData = new FormData(e.target);
       const accountId = formData.get('transaction-account');
       const account = accounts.find(a => a.id === accountId);
-      if (!account) return;
+      
+      if (!account) {
+        alert('Por favor selecciona una cuenta válida');
+        return;
+      }
 
       const amount = Number(formData.get('transaction-amount'));
-      const movement = formData.get('transaction-movement');
+      if (amount <= 0) {
+        alert('El monto debe ser mayor a 0');
+        return;
+      }
 
-      transactions.push({
+      const movement = formData.get('transaction-movement');
+      const newTransaction = {
         id: Math.random().toString(36).substr(2, 9),
         date: formData.get('transaction-date'),
-        description: formData.get('transaction-description'),
+        description: formData.get('transaction-description').trim(),
         accountId,
         accountName: account.name,
         movement,
         amount
-      });
+      };
+
+      transactions.push(newTransaction);
 
       if (movement === 'Entrada') {
         account.debits.push({ amount });
@@ -733,14 +834,27 @@
 
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
-    // Initialize theme
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      isDarkMode = true;
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.getElementById('themeToggle').textContent = '☀️';
-    }
+    // Initialize
+    const loadData = () => {
+      const savedAccounts = localStorage.getItem('accounts');
+      const savedTransactions = localStorage.getItem('transactions');
+      
+      if (savedAccounts) {
+        accounts = JSON.parse(savedAccounts);
+      }
+      if (savedTransactions) {
+        transactions = JSON.parse(savedTransactions);
+      }
+    };
 
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('transactionDate').value = today;
+
+    // Start app
+    initializeTheme();
+    loadData();
+    updateAccountOptions();
     refreshUI();
   </script>
 </body>

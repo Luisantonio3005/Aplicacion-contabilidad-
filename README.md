@@ -1,126 +1,194 @@
 # Aplicación de Contabilidad con Cuentas T
 
-Una aplicación web moderna para gestionar contabilidad con el método de Cuentas T. Permite registrar cuentas, transacciones de débito y crédito, y visualizar estados financieros en tiempo real.
+Una aplicación web moderna, responsiva y completamente funcional para gestionar contabilidad usando el método de Cuentas T. Registra cuentas, transacciones de débito y crédito, y visualiza estados financieros en tiempo real.
 
-## 🚀 Despliegue en GitHub Pages
+## 🚀 Acceso Rápido
 
-**La aplicación se despliega automáticamente en:** https://luisantonio3005.github.io/Aplicacion-contabilidad-/
+**URL de la aplicación:** https://luisantonio3005.github.io/Aplicacion-contabilidad-/
 
-El despliegue se realiza automáticamente cuando haces push a la rama `master` gracias al workflow de GitHub Actions.
+La aplicación está completamente funcional y lista para usar. No requiere instalación.
 
-## ✨ Características
+## ✨ Características Principales
 
-✅ **Gestión de Cuentas**
-- Crear cuentas de diferentes tipos: Activos, Pasivos, Patrimonio, Ingresos, Gastos
-- Saldo inicial configurable
-- Soporte para múltiples monedas (MXN, USD, EUR)
-- Clasificación de gastos (Fijos, Variables)
+### 📊 Gestión de Cuentas
+- Crear cuentas de diferentes tipos: **Activos**, **Pasivos**, **Patrimonio**, **Ingresos**, **Gastos**
+- Saldo inicial configurable para cada cuenta
+- Soporte para múltiples monedas: **MXN**, **USD**, **EUR**
+- Clasificación de gastos: **Fijo**, **Variable**, **Pasivo**
+- Visualización clara de todas las cuentas registradas
 
-✅ **Registro de Transacciones**
+### 💰 Registro de Transacciones
 - Registrar entradas (débitos) y salidas (créditos)
-- Fecha, descripción y monto para cada transacción
-- Eliminar transacciones registradas
+- Fecha automática (hoy por defecto)
+- Descripción detallada de cada movimiento
+- Monto flexible con validación
+- Eliminación de transacciones registradas
 - Actualización automática de saldos
 
-✅ **Estados Financieros**
-- Estado de Resultados (Ingresos, Gastos, Utilidad/Pérdida)
-- Balance General (Activos, Pasivos, Patrimonio)
-- Resumen de Cuentas T con saldos actualizados
+### 📈 Estados Financieros
+- **Estado de Resultados**: Ingresos, Gastos, Utilidad/Pérdida
+- **Balance General**: Activos, Pasivos, Patrimonio
+- **Resumen de Cuentas T**: Saldos actualizados en tiempo real
+- Totales de débitos y créditos
 
-✅ **Tema Oscuro/Claro**
-- Cambio de tema con un clic
-- Persistencia del tema en localStorage
+### 🎨 Tema Oscuro/Claro
+- Cambio de tema con un clic (botón 🌙/☀️)
+- Persistencia del tema en el navegador
 - Transiciones suaves entre temas
+- Colores optimizados para máxima legibilidad
+- Interfaz completamente adaptada en ambos modos
 
-## 🛠️ Tecnologías
+### 📱 Diseño Responsivo
+- Funciona perfectamente en desktop, tablet y móvil
+- Interfaz adaptativa que se ajusta a cualquier pantalla
+- Tablas con scroll horizontal en dispositivos pequeños
 
-- **Frontend**: React 19 + TypeScript
-- **Estilos**: CSS3 con variables personalizadas
-- **Componentes**: shadcn/ui
-- **Enrutamiento**: Wouter
-- **Build**: Vite
-- **Despliegue**: GitHub Pages con GitHub Actions
+## 🛠️ Tecnologías Utilizadas
 
-## 📦 Instalación Local
+- **HTML5**: Estructura semántica
+- **CSS3**: Estilos avanzados con variables personalizadas
+- **JavaScript Vanilla**: Lógica sin dependencias externas
+- **LocalStorage**: Persistencia de datos en el navegador
+- **GitHub Pages**: Despliegue automático
 
-```bash
-# Instalar dependencias
-pnpm install
+## 📖 Cómo Usar
 
-# Ejecutar en desarrollo
-pnpm dev
+### 1. Agregar una Cuenta
+1. Completa el formulario "Agregar cuenta" con:
+   - **Nombre**: Identificador de la cuenta (ej: Caja, Ventas)
+   - **Tipo**: Selecciona entre Activo, Pasivo, Patrimonio, Ingreso, Gasto
+   - **Saldo inicial**: Monto inicial (opcional)
+   - **Clasificación**: Fijo, Variable o Pasivo
+   - **Moneda**: MXN, USD o EUR
+2. Haz clic en "Agregar cuenta"
 
-# Compilar para producción
-pnpm build
+### 2. Registrar una Transacción
+1. Completa el formulario "Registrar transacción" con:
+   - **Fecha**: Se rellena automáticamente con hoy
+   - **Descripción**: Detalle del movimiento
+   - **Cuenta**: Selecciona una cuenta existente
+   - **Movimiento**: Entrada (Débito) o Salida (Crédito)
+   - **Monto**: Cantidad del movimiento
+2. Haz clic en "Registrar transacción"
 
-# Vista previa de producción
-pnpm preview
-```
+### 3. Ver Estados Financieros
+Los estados se actualizan automáticamente:
+- **Resumen de Cuentas T**: Muestra todas las cuentas y sus saldos
+- **Estado de Resultados**: Ingresos menos gastos
+- **Balance General**: Verificación de la ecuación contable
 
-## 📁 Estructura del Proyecto
+### 4. Cambiar Tema
+Haz clic en el botón 🌙 (modo claro) o ☀️ (modo oscuro) en la esquina superior derecha.
 
-```
-├── client/
-│   ├── public/          # Archivos estáticos
-│   ├── src/
-│   │   ├── pages/       # Componentes de página
-│   │   ├── components/  # Componentes reutilizables
-│   │   ├── contexts/    # Contextos de React
-│   │   ├── hooks/       # Hooks personalizados
-│   │   ├── lib/         # Utilidades
-│   │   ├── App.tsx      # Componente raíz
-│   │   ├── main.tsx     # Punto de entrada
-│   │   └── index.css    # Estilos globales
-│   └── index.html       # HTML principal
-├── server/              # Servidor Express (placeholder)
-├── shared/              # Código compartido
-├── index.html           # Punto de entrada para GitHub Pages
-├── .github/
-│   └── workflows/
-│       └── deploy.yml   # Workflow de despliegue automático
-└── README.md            # Este archivo
-```
+## 💾 Persistencia de Datos
 
-## 📖 Uso
+La aplicación guarda automáticamente:
+- Todas las cuentas registradas
+- Todas las transacciones
+- Tu preferencia de tema (claro/oscuro)
 
-1. **Agregar Cuenta**: Completa el formulario con nombre, tipo, saldo inicial y moneda
-2. **Registrar Transacción**: Selecciona una cuenta, tipo de movimiento y monto
-3. **Ver Estados**: Los estados financieros se actualizan automáticamente
-4. **Cambiar Tema**: Usa el botón de tema en la esquina superior derecha
+Los datos se guardan en el navegador y se recuperan automáticamente al recargar la página.
 
 ## 🎨 Sistema de Temas
 
-La aplicación incluye un sistema de temas completo con:
+### Modo Claro
+- Fondo blanco (#ffffff)
+- Textos oscuros (#1f2937)
+- Botones azules (#2563eb)
+- Perfecto para ambientes bien iluminados
 
-- **Modo Claro**: Fondo blanco, textos oscuros, colores azules y verdes
-- **Modo Oscuro**: Fondo azul muy oscuro (#0f172a), textos claros, colores ajustados para contraste
+### Modo Oscuro
+- Fondo azul muy oscuro (#0f172a)
+- Textos claros (#f1f5f9)
+- Botones azul claro (#3b82f6)
+- Ideal para trabajo nocturno
 
-Todos los elementos se adaptan automáticamente al cambio de tema con transiciones suaves.
+## 📊 Estructura de Datos
 
-## 📝 Correcciones Implementadas
+### Cuentas
+```javascript
+{
+  id: "unique-id",
+  name: "Nombre de la cuenta",
+  type: "Activo|Pasivo|Patrimonio|Ingreso|Gasto",
+  costType: "Fijo|Variable|Pasivo",
+  initialBalance: 1000,
+  currency: "MXN|USD|EUR",
+  debits: [{ amount: 500 }],
+  credits: [{ amount: 200 }]
+}
+```
 
-- ✅ Fondo de pantalla cambia correctamente en modo oscuro
-- ✅ Títulos h2 se visualizan en blanco en modo oscuro
-- ✅ Transiciones suaves entre temas
-- ✅ Interfaz responsiva y accesible
-- ✅ Colores optimizados para legibilidad
-- ✅ Despliegue automático en GitHub Pages
+### Transacciones
+```javascript
+{
+  id: "unique-id",
+  date: "2024-04-28",
+  description: "Venta de productos",
+  accountId: "account-id",
+  accountName: "Ventas",
+  movement: "Entrada|Salida",
+  amount: 1500
+}
+```
 
-## 🚀 Despliegue Automático
+## 🔧 Instalación Local (Opcional)
 
-El proyecto incluye un workflow de GitHub Actions que:
+Si deseas ejecutar la aplicación localmente:
 
-1. Se ejecuta automáticamente cuando haces push a `master`
-2. Instala dependencias
-3. Compila la aplicación
-4. Despliega en GitHub Pages
+```bash
+# Clonar el repositorio
+git clone https://github.com/Luisantonio3005/Aplicacion-contabilidad-.git
+
+# Navegar al directorio
+cd Aplicacion-contabilidad-
+
+# Abrir en el navegador
+# Simplemente abre el archivo index.html en tu navegador
+```
+
+## 📝 Validaciones Implementadas
+
+- ✅ Nombre de cuenta requerido y no vacío
+- ✅ Tipo de cuenta obligatorio
+- ✅ Cuenta válida para transacciones
+- ✅ Monto debe ser mayor a 0
+- ✅ Fecha requerida
+- ✅ Descripción requerida
+- ✅ Validación de formatos de entrada
+
+## 🎯 Características Destacadas
+
+| Característica | Estado |
+|---|---|
+| Gestión de cuentas | ✅ Completo |
+| Registro de transacciones | ✅ Completo |
+| Estados financieros | ✅ Completo |
+| Modo oscuro/claro | ✅ Completo |
+| Persistencia de datos | ✅ Completo |
+| Diseño responsivo | ✅ Completo |
+| Validaciones | ✅ Completo |
+| Sin dependencias externas | ✅ Completo |
+
+## 🚀 Despliegue
+
+La aplicación se despliega automáticamente en GitHub Pages desde el archivo `index.html` en la rama `master`.
 
 **No requiere configuración adicional.**
 
-## Licencia
+## 📄 Licencia
 
 MIT
 
-## Autor
+## 👨‍💻 Autor
 
 Desarrollado con Manus
+
+---
+
+## 📞 Soporte
+
+Para reportar problemas o sugerencias, crea un issue en el repositorio de GitHub.
+
+**Versión actual:** 1.0.0  
+**Última actualización:** Abril 2026
