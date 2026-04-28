@@ -1,269 +1,347 @@
-// State management
+// ========================================
+// APLICACIÓN DE CONTABILIDAD
+// Almacenamiento local con localStorage
+// ========================================
+
+// Datos globales
 let accounts = [];
 let transactions = [];
-let isDarkMode = false;
 
-// Utility functions
-const formatCurrency = (value) => {
-  return Number(value).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
+// Inicializar la aplicación
+document.addEventListener('DOMContentLoaded', () => {
+  loadDataFromLocalStorage();
+  setupTheme();
+  setupEventListeners();
+  setDefaultDate();
+  renderAccounts();
+  renderTransactions();
+  updateFinancialStatements();
+});
 
-const getNormalBalanceType = (account) => {
-  if (account.type === 'Activo' || account.type === 'Gasto') return 'Debit';
-  return 'Credit';
-};
+// ========================================
+// ALMACENAMIENTO LOCAL (localStorage)
+// ========================================
 
-const computeBalance = (account) => {
-  const debits = account.debits.reduce((sum, item) => sum + item.amount, 0) +
-    (getNormalBalanceType(account) === 'Debit' ? account.initialBalance : 0);
-  const credits = account.credits.reduce((sum, item) => sum + item.amount, 0) +
-    (getNormalBalanceType(account) === 'Credit' ? account.initialBalance : 0);
-  return debits - credits;
-};
-
-// Theme management
-const toggleTheme = () => {
-  isDarkMode = !isDarkMode;
-  localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-  document.getElementById('themeToggle').textContent = isDarkMode ? '☀️' : '🌙';
-};
-
-const initializeTheme = () => {
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'dark') {
-    isDarkMode = true;
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.getElementById('themeToggle').textContent = '☀️';
-  } else {
-    document.getElementById('themeToggle').textContent = '🌙';
-  }
-};
-
-// UI update functions
-const updateAccountOptions = () => {
-  const select = document.getElementById('transactionAccountSelect');
-  select.innerHTML = '<option value="">Seleccione cuenta</option>' +
-    accounts.map(acc => `<option value="${acc.id}">${acc.name}</option>`).join('');
-};
-
-const refreshUI = () => {
-  // Accounts table
-  const accountsBody = document.querySelector('#accountsTable tbody');
-  if (accounts.length === 0) {
-    accountsBody.innerHTML = '<tr><td colspan="4" class="empty-state">No hay cuentas registradas</td></tr>';
-  } else {
-    accountsBody.innerHTML = accounts.map(acc => `
-      <tr>
-        <td>${acc.name}</td>
-        <td>${acc.type}</td>
-        <td>${acc.costType}</td>
-        <td>${formatCurrency(Math.abs(computeBalance(acc)))} ${acc.currency}</td>
-      </tr>
-    `).join('');
-  }
-
-  // Transactions table
-  const transactionsBody = document.querySelector('#transactionsTable tbody');
-  if (transactions.length === 0) {
-    transactionsBody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay transacciones registradas</td></tr>';
-  } else {
-    transactionsBody.innerHTML = transactions.map(tx => `
-      <tr>
-        <td>${tx.date}</td>
-        <td>${tx.description}</td>
-        <td>${tx.accountName}</td>
-        <td>${tx.movement}</td>
-        <td>${formatCurrency(tx.amount)}</td>
-        <td><button class="btn-danger" onclick="removeTransaction('${tx.id}')">Eliminar</button></td>
-      </tr>
-    `).join('');
-  }
-
-  // Accounts grid
-  const grid = document.getElementById('accountsGrid');
-  if (accounts.length === 0) {
-    grid.innerHTML = '<div class="empty-state">Agrega cuentas para verlas aquí</div>';
-  } else {
-    grid.innerHTML = accounts.map(acc => `
-      <div class="account-card">
-        <h3>${acc.name} <span class="small">(${acc.type})</span></h3>
-        <p><strong>Saldo:</strong> ${formatCurrency(Math.abs(computeBalance(acc)))}</p>
-        <p><strong>Clasificación:</strong> ${acc.costType}</p>
-      </div>
-    `).join('');
-  }
-
-  // Totals
-  const totalDebits = transactions.filter(t => t.movement === 'Entrada').reduce((s, t) => s + t.amount, 0);
-  const totalCredits = transactions.filter(t => t.movement === 'Salida').reduce((s, t) => s + t.amount, 0);
-  document.getElementById('totalDebit').textContent = formatCurrency(totalDebits);
-  document.getElementById('totalCredit').textContent = formatCurrency(totalCredits);
-
-  // Financial statements
-  const income = accounts.filter(a => a.type === 'Ingreso').reduce((s, a) => s + computeBalance(a) * -1, 0);
-  const expenses = accounts.filter(a => a.type === 'Gasto').reduce((s, a) => s + computeBalance(a), 0);
-  const netIncome = income - expenses;
-
-  document.getElementById('income').textContent = formatCurrency(income);
-  document.getElementById('expenses').textContent = formatCurrency(expenses);
-  document.getElementById('netIncome').textContent = formatCurrency(netIncome);
-
-  const assets = accounts.filter(a => a.type === 'Activo').reduce((s, a) => s + computeBalance(a), 0);
-  const liabilities = accounts.filter(a => a.type === 'Pasivo').reduce((s, a) => s + computeBalance(a) * -1, 0);
-  const equity = accounts.filter(a => a.type === 'Patrimonio').reduce((s, a) => s + computeBalance(a) * -1, 0) + netIncome;
-
-  document.getElementById('assets').textContent = formatCurrency(assets);
-  document.getElementById('liabilities').textContent = formatCurrency(liabilities);
-  document.getElementById('equity').textContent = formatCurrency(equity);
-  document.getElementById('totalLiabilitiesEquity').textContent = formatCurrency(liabilities + equity);
-
-  // Save to localStorage
+function saveDataToLocalStorage() {
   localStorage.setItem('accounts', JSON.stringify(accounts));
   localStorage.setItem('transactions', JSON.stringify(transactions));
-};
+}
 
-// Transaction management
-const removeTransaction = (id) => {
-  const transaction = transactions.find(t => t.id === id);
-  if (!transaction) return;
-
-  transactions = transactions.filter(t => t.id !== id);
-  const account = accounts.find(a => a.id === transaction.accountId);
-  if (account) {
-    if (transaction.movement === 'Entrada') {
-      account.debits.pop();
-    } else {
-      account.credits.pop();
-    }
-  }
-  refreshUI();
-};
-
-// Event listeners
-document.getElementById('accountForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  
-  const newAccount = {
-    id: Math.random().toString(36).substr(2, 9),
-    name: formData.get('account-name').trim(),
-    type: formData.get('account-type'),
-    costType: formData.get('account-cost-type'),
-    initialBalance: Number(formData.get('account-balance')) || 0,
-    currency: formData.get('account-currency'),
-    debits: [],
-    credits: []
-  };
-
-  if (!newAccount.name) {
-    alert('Por favor ingresa un nombre para la cuenta');
-    return;
-  }
-
-  accounts.push(newAccount);
-  e.target.reset();
-  updateAccountOptions();
-  refreshUI();
-});
-
-document.getElementById('transactionForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const accountId = formData.get('transaction-account');
-  const account = accounts.find(a => a.id === accountId);
-  
-  if (!account) {
-    alert('Por favor selecciona una cuenta válida');
-    return;
-  }
-
-  const amount = Number(formData.get('transaction-amount'));
-  if (amount <= 0) {
-    alert('El monto debe ser mayor a 0');
-    return;
-  }
-
-  const movement = formData.get('transaction-movement');
-  const newTransaction = {
-    id: Math.random().toString(36).substr(2, 9),
-    date: formData.get('transaction-date'),
-    description: formData.get('transaction-description').trim(),
-    accountId,
-    accountName: account.name,
-    movement,
-    amount
-  };
-
-  transactions.push(newTransaction);
-
-  if (movement === 'Entrada') {
-    account.debits.push({ amount });
-  } else {
-    account.credits.push({ amount });
-  }
-
-  e.target.reset();
-  refreshUI();
-});
-
-document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
-// Initialize
-const loadData = () => {
+function loadDataFromLocalStorage() {
   const savedAccounts = localStorage.getItem('accounts');
   const savedTransactions = localStorage.getItem('transactions');
   
-  if (savedAccounts) {
-    accounts = JSON.parse(savedAccounts);
-  }
-  if (savedTransactions) {
-    transactions = JSON.parse(savedTransactions);
-  }
-};
+  accounts = savedAccounts ? JSON.parse(savedAccounts) : [];
+  transactions = savedTransactions ? JSON.parse(savedTransactions) : [];
+}
 
-// Set today's date as default
-const today = new Date().toISOString().split('T')[0];
-document.getElementById('transactionDate').value = today;
+// ========================================
+// TEMA OSCURO/CLARO
+// ========================================
 
-// Contact Form Handler
-document.getElementById('contactForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
+function setupTheme() {
+  const themeToggle = document.getElementById('themeToggle');
+  const savedTheme = localStorage.getItem('theme') || 'light';
   
-  const contactData = {
-    name: formData.get('contact-name').trim(),
-    email: formData.get('contact-email').trim(),
-    message: formData.get('contact-message').trim(),
-    timestamp: new Date().toISOString(),
-    userAgent: navigator.userAgent
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeButton(savedTheme);
+  
+  themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeButton(newTheme);
+  });
+}
+
+function updateThemeButton(theme) {
+  const themeToggle = document.getElementById('themeToggle');
+  themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+}
+
+// ========================================
+// EVENT LISTENERS
+// ========================================
+
+function setupEventListeners() {
+  document.getElementById('accountForm').addEventListener('submit', handleAddAccount);
+  document.getElementById('transactionForm').addEventListener('submit', handleAddTransaction);
+}
+
+function setDefaultDate() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('transactionDate').value = today;
+}
+
+// ========================================
+// CUENTAS
+// ========================================
+
+function handleAddAccount(e) {
+  e.preventDefault();
+  
+  const name = document.getElementById('accountName').value.trim();
+  const type = document.getElementById('accountType').value;
+  const balance = parseFloat(document.getElementById('accountBalance').value) || 0;
+  const costType = document.getElementById('accountCostType').value;
+  const currency = document.getElementById('accountCurrency').value;
+  
+  if (!name || !type) {
+    alert('Por favor completa todos los campos');
+    return;
+  }
+  
+  const account = {
+    id: Date.now(),
+    name,
+    type,
+    balance,
+    costType,
+    currency,
+    createdAt: new Date().toISOString()
   };
+  
+  accounts.push(account);
+  saveDataToLocalStorage();
+  
+  document.getElementById('accountForm').reset();
+  renderAccounts();
+  updateFinancialStatements();
+  
+  alert('✅ Cuenta agregada exitosamente');
+}
 
-  // Validar email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(contactData.email)) {
-    alert('Por favor ingresa un email válido');
+function renderAccounts() {
+  const tbody = document.querySelector('#accountsTable tbody');
+  
+  if (accounts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No hay cuentas registradas</td></tr>';
+    updateTransactionSelect();
     return;
   }
+  
+  tbody.innerHTML = accounts.map(account => `
+    <tr>
+      <td><strong>${account.name}</strong></td>
+      <td>${account.type}</td>
+      <td>${account.costType}</td>
+      <td>${formatCurrency(account.balance, account.currency)}</td>
+    </tr>
+  `).join('');
+  
+  updateTransactionSelect();
+}
 
-  // Validar mensaje
-  if (contactData.message.length < 10) {
-    alert('El mensaje debe tener al menos 10 caracteres');
+function updateTransactionSelect() {
+  const select = document.getElementById('transactionAccountSelect');
+  const currentValue = select.value;
+  
+  select.innerHTML = '<option value="">Seleccione cuenta</option>' + 
+    accounts.map(account => `<option value="${account.id}">${account.name}</option>`).join('');
+  
+  select.value = currentValue;
+}
+
+// ========================================
+// TRANSACCIONES
+// ========================================
+
+function handleAddTransaction(e) {
+  e.preventDefault();
+  
+  const date = document.getElementById('transactionDate').value;
+  const description = document.getElementById('transactionDescription').value.trim();
+  const accountId = parseInt(document.getElementById('transactionAccountSelect').value);
+  const movement = document.getElementById('transactionMovement').value;
+  const amount = parseFloat(document.getElementById('transactionAmount').value) || 0;
+  
+  if (!date || !description || !accountId || !movement || amount <= 0) {
+    alert('Por favor completa todos los campos correctamente');
     return;
   }
+  
+  const account = accounts.find(a => a.id === accountId);
+  if (!account) {
+    alert('Cuenta no encontrada');
+    return;
+  }
+  
+  // Actualizar saldo de la cuenta
+  if (movement === 'Entrada') {
+    account.balance += amount;
+  } else {
+    account.balance -= amount;
+  }
+  
+  const transaction = {
+    id: Date.now(),
+    date,
+    description,
+    accountId,
+    accountName: account.name,
+    movement,
+    amount,
+    createdAt: new Date().toISOString()
+  };
+  
+  transactions.push(transaction);
+  saveDataToLocalStorage();
+  
+  document.getElementById('transactionForm').reset();
+  setDefaultDate();
+  renderAccounts();
+  renderTransactions();
+  updateFinancialStatements();
+  
+  alert('✅ Transacción registrada exitosamente');
+}
 
-  // Guardar en localStorage
-  const contactMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
-  contactMessages.push(contactData);
-  localStorage.setItem('contactMessages', JSON.stringify(contactMessages));
+function renderTransactions() {
+  const tbody = document.querySelector('#transactionsTable tbody');
+  
+  if (transactions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay transacciones registradas</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = transactions.map(transaction => `
+    <tr>
+      <td>${transaction.date}</td>
+      <td>${transaction.description}</td>
+      <td>${transaction.accountName}</td>
+      <td>${transaction.movement === 'Entrada' ? '📥 Débito' : '📤 Crédito'}</td>
+      <td>${formatCurrency(transaction.amount, 'MXN')}</td>
+      <td>
+        <button class="btn-delete" onclick="deleteTransaction(${transaction.id})">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
+}
 
-  // Mostrar confirmación
-  alert('Mensaje enviado exitosamente. Luis Antonio Canales Guerrero se pondrá en contacto pronto.');
-  e.target.reset();
-});
+function deleteTransaction(transactionId) {
+  const transaction = transactions.find(t => t.id === transactionId);
+  if (!transaction) return;
+  
+  const account = accounts.find(a => a.id === transaction.accountId);
+  if (account) {
+    if (transaction.movement === 'Entrada') {
+      account.balance -= transaction.amount;
+    } else {
+      account.balance += transaction.amount;
+    }
+  }
+  
+  transactions = transactions.filter(t => t.id !== transactionId);
+  saveDataToLocalStorage();
+  
+  renderAccounts();
+  renderTransactions();
+  updateFinancialStatements();
+}
 
-// Start app
-initializeTheme();
-loadData();
-updateAccountOptions();
-refreshUI();
+// ========================================
+// ESTADOS FINANCIEROS
+// ========================================
+
+function updateFinancialStatements() {
+  // Calcular totales por tipo de cuenta
+  const assets = accounts
+    .filter(a => a.type === 'Activo')
+    .reduce((sum, a) => sum + a.balance, 0);
+  
+  const liabilities = accounts
+    .filter(a => a.type === 'Pasivo')
+    .reduce((sum, a) => sum + a.balance, 0);
+  
+  const equity = accounts
+    .filter(a => a.type === 'Patrimonio')
+    .reduce((sum, a) => sum + a.balance, 0);
+  
+  const income = accounts
+    .filter(a => a.type === 'Ingreso')
+    .reduce((sum, a) => sum + a.balance, 0);
+  
+  const expenses = accounts
+    .filter(a => a.type === 'Gasto')
+    .reduce((sum, a) => sum + a.balance, 0);
+  
+  // Calcular totales de débito y crédito
+  const totalDebit = transactions
+    .filter(t => t.movement === 'Entrada')
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  const totalCredit = transactions
+    .filter(t => t.movement === 'Salida')
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  // Actualizar DOM
+  document.getElementById('assets').textContent = formatCurrency(assets, 'MXN');
+  document.getElementById('liabilities').textContent = formatCurrency(liabilities, 'MXN');
+  document.getElementById('equity').textContent = formatCurrency(equity, 'MXN');
+  document.getElementById('income').textContent = formatCurrency(income, 'MXN');
+  document.getElementById('expenses').textContent = formatCurrency(expenses, 'MXN');
+  document.getElementById('netIncome').textContent = formatCurrency(income - expenses, 'MXN');
+  document.getElementById('totalDebit').textContent = formatCurrency(totalDebit, 'MXN');
+  document.getElementById('totalCredit').textContent = formatCurrency(totalCredit, 'MXN');
+  
+  const totalLiabilitiesEquity = liabilities + equity;
+  document.getElementById('totalLiabilitiesEquity').textContent = formatCurrency(totalLiabilitiesEquity, 'MXN');
+  
+  // Renderizar cuentas T
+  renderTAccounts();
+}
+
+function renderTAccounts() {
+  const container = document.getElementById('accountsGrid');
+  
+  if (accounts.length === 0) {
+    container.innerHTML = '<p class="empty-state">No hay cuentas para mostrar</p>';
+    return;
+  }
+  
+  container.innerHTML = accounts.map(account => {
+    const debits = transactions
+      .filter(t => t.accountId === account.id && t.movement === 'Entrada')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const credits = transactions
+      .filter(t => t.accountId === account.id && t.movement === 'Salida')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    return `
+      <div class="t-account">
+        <div class="t-account-title">${account.name}</div>
+        <div class="t-account-body">
+          <div class="t-account-left">
+            <div class="t-account-header">Débito</div>
+            <div class="t-account-amount">${formatCurrency(debits, account.currency)}</div>
+          </div>
+          <div class="t-account-right">
+            <div class="t-account-header">Crédito</div>
+            <div class="t-account-amount">${formatCurrency(credits, account.currency)}</div>
+          </div>
+        </div>
+        <div class="t-account-footer">
+          Saldo: ${formatCurrency(account.balance, account.currency)}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ========================================
+// UTILIDADES
+// ========================================
+
+function formatCurrency(value, currency = 'MXN') {
+  const symbols = {
+    'MXN': '$',
+    'USD': '$',
+    'EUR': '€'
+  };
+  
+  const symbol = symbols[currency] || currency;
+  return `${symbol} ${value.toFixed(2)}`;
+}
