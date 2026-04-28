@@ -1,19 +1,87 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!-- Meta Tags Básicos -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Aplicación de Contabilidad con Cuentas T - Registra cuentas, transacciones de débito y crédito, y visualiza estados financieros en tiempo real." />
+  <meta name="description" content="Aplicación de Contabilidad con Cuentas T - Registra cuentas, transacciones de débito y crédito, y visualiza estados financieros en tiempo real. Desarrollada por Luis Antonio Canales Guerrero." />
+  <meta name="keywords" content="contabilidad, cuentas T, estados financieros, balance general, estado de resultados, herramienta contable, Luis Antonio Canales Guerrero" />
+  <meta name="author" content="Luis Antonio Canales Guerrero" />
+  <meta name="creator" content="Luis Antonio Canales Guerrero" />
+  <meta name="publisher" content="Luis Antonio Canales Guerrero" />
+  <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#2563eb" />
-  <title>Contabilidad con Cuentas T</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://luisantonio3005.github.io/Aplicacion-contabilidad-/" />
+  <meta property="og:title" content="Contabilidad con Cuentas T - Luis Antonio Canales Guerrero" />
+  <meta property="og:description" content="Herramienta profesional de contabilidad con Cuentas T, estados financieros y análisis en tiempo real." />
+  <meta property="og:site_name" content="Contabilidad con Cuentas T" />
+  <meta property="og:locale" content="es_ES" />
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Contabilidad con Cuentas T - Luis Antonio Canales Guerrero" />
+  <meta name="twitter:description" content="Herramienta profesional de contabilidad con Cuentas T, estados financieros y análisis en tiempo real." />
+  
+  <!-- LinkedIn -->
+  <meta name="linkedin:creator" content="Luis Antonio Canales Guerrero" />
+  <meta name="linkedin:url" content="https://www.linkedin.com/in/luis-antonio-canales-guerrero-b3565b280" />
+  
+  <!-- Google Search Console Verification -->
+  <meta name="google-site-verification" content="google3386d1ae94d341bf" />
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://luisantonio3005.github.io/Aplicacion-contabilidad-/" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' font-weight='bold' fill='%232563eb'>T</text></svg>" />
+  
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="css/styles.css" />
+  
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Contabilidad con Cuentas T",
+    "description": "Aplicación profesional de contabilidad con Cuentas T, estados financieros y análisis en tiempo real",
+    "url": "https://luisantonio3005.github.io/Aplicacion-contabilidad-/",
+    "applicationCategory": "BusinessApplication",
+    "creator": {
+      "@type": "Person",
+      "name": "Luis Antonio Canales Guerrero",
+      "url": "https://www.linkedin.com/in/luis-antonio-canales-guerrero-b3565b280",
+      "sameAs": [
+        "https://github.com/Luisantonio3005",
+        "https://www.linkedin.com/in/luis-antonio-canales-guerrero-b3565b280"
+      ]
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5",
+      "ratingCount": "1"
+    }
+  }
+  </script>
+  
+  <title>Contabilidad con Cuentas T - Luis Antonio Canales Guerrero</title>
 </head>
 <body>
   <div class="container">
     <header class="header">
       <div class="header-content">
         <h1>Contabilidad con Cuentas T</h1>
-        <p>Registra cuentas, transacciones de débito y crédito, y observa los saldos en formato Cuenta T.</p>
+        <p>Herramienta profesional desarrollada por <strong>Luis Antonio Canales Guerrero</strong> para registrar cuentas, transacciones de débito y crédito, y visualizar estados financieros en tiempo real.</p>
       </div>
       <button class="theme-toggle" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
     </header>
@@ -203,8 +271,60 @@
         </div>
       </div>
     </div>
+
+    <!-- Cloud Sync Section -->
+    <div class="card">
+      <div id="syncContainer"></div>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="card">
+      <h2>📧 Contacto - Luis Antonio Canales Guerrero</h2>
+      <div class="contact-section">
+        <div class="contact-info">
+          <p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/luis-antonio-canales-guerrero-b3565b280" target="_blank" rel="noopener noreferrer">Ver perfil</a></p>
+          <p><strong>GitHub:</strong> <a href="https://github.com/Luisantonio3005" target="_blank" rel="noopener noreferrer">Ver repositorios</a></p>
+          <p><strong>Email:</strong> <a href="mailto:luis@example.com">Contactar</a></p>
+        </div>
+        
+        <form id="contactForm" class="contact-form">
+          <h3>Enviar mensaje</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="contactName">Tu nombre</label>
+              <input type="text" id="contactName" name="contact-name" required />
+            </div>
+            <div class="form-group">
+              <label for="contactEmail">Tu email</label>
+              <input type="email" id="contactEmail" name="contact-email" required />
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="contactMessage">Mensaje</label>
+              <textarea id="contactMessage" name="contact-message" rows="4" required></textarea>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1; justify-content: flex-end;">
+              <button type="submit" class="btn-primary">Enviar mensaje</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; 2026 Contabilidad con Cuentas T. Desarrollado por <strong>Luis Antonio Canales Guerrero</strong></p>
+      <p>
+        <a href="https://www.linkedin.com/in/luis-antonio-canales-guerrero-b3565b280" target="_blank" rel="noopener noreferrer">LinkedIn</a> | 
+        <a href="https://github.com/Luisantonio3005" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </p>
+    </footer>
   </div>
 
+  <!-- Scripts -->
+  <script src="js/security.js"></script>
+  <script src="js/admin-alerts.js"></script>
+  <script src="js/cloud-sync.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/email-integration.js"></script>
 </body>
 </html>

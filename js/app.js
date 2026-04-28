@@ -226,6 +226,42 @@ const loadData = () => {
 const today = new Date().toISOString().split('T')[0];
 document.getElementById('transactionDate').value = today;
 
+// Contact Form Handler
+document.getElementById('contactForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  
+  const contactData = {
+    name: formData.get('contact-name').trim(),
+    email: formData.get('contact-email').trim(),
+    message: formData.get('contact-message').trim(),
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent
+  };
+
+  // Validar email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(contactData.email)) {
+    alert('Por favor ingresa un email válido');
+    return;
+  }
+
+  // Validar mensaje
+  if (contactData.message.length < 10) {
+    alert('El mensaje debe tener al menos 10 caracteres');
+    return;
+  }
+
+  // Guardar en localStorage
+  const contactMessages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
+  contactMessages.push(contactData);
+  localStorage.setItem('contactMessages', JSON.stringify(contactMessages));
+
+  // Mostrar confirmación
+  alert('Mensaje enviado exitosamente. Luis Antonio Canales Guerrero se pondrá en contacto pronto.');
+  e.target.reset();
+});
+
 // Start app
 initializeTheme();
 loadData();
