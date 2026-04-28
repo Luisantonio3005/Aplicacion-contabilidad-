@@ -1,39 +1,23 @@
 // ========================================
-// APLICACIÓN DE CONTABILIDAD
-// Almacenamiento local con localStorage
+// APLICACIÓN DE CONTABILIDAD CON SQLite
 // ========================================
 
-// Datos globales
-let accounts = [];
-let transactions = [];
-
-// Inicializar la aplicación
-document.addEventListener('DOMContentLoaded', () => {
-  loadDataFromLocalStorage();
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', async () => {
+  // Inicializar base de datos
+  const dbReady = await initDatabase();
+  
+  if (!dbReady) {
+    alert('❌ Error al inicializar la base de datos');
+    return;
+  }
+  
   setupTheme();
   setupEventListeners();
+  setupDatabaseMenu();
   setDefaultDate();
-  renderAccounts();
-  renderTransactions();
-  updateFinancialStatements();
+  renderUI();
 });
-
-// ========================================
-// ALMACENAMIENTO LOCAL (localStorage)
-// ========================================
-
-function saveDataToLocalStorage() {
-  localStorage.setItem('accounts', JSON.stringify(accounts));
-  localStorage.setItem('transactions', JSON.stringify(transactions));
-}
-
-function loadDataFromLocalStorage() {
-  const savedAccounts = localStorage.getItem('accounts');
-  const savedTransactions = localStorage.getItem('transactions');
-  
-  accounts = savedAccounts ? JSON.parse(savedAccounts) : [];
-  transactions = savedTransactions ? JSON.parse(savedTransactions) : [];
-}
 
 // ========================================
 // TEMA OSCURO/CLARO
@@ -59,6 +43,98 @@ function setupTheme() {
 function updateThemeButton(theme) {
   const themeToggle = document.getElementById('themeToggle');
   themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+}
+
+// ========================================
+// MENÚ DE BASE DE DATOS
+// ========================================
+
+function setupDatabaseMenu() {
+  const dbMenu = document.getElementById('dbMenu');
+  const dbMenuPanel = document.getElementById('dbMenuPanel');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const importFile = document.getElementById('importFile');
+  
+  // Toggle menú
+  dbMenu.addEventListener('click', () => {
+    dbMenuPanel.style.display = dbMenuPanel.style.display === 'none' ? 'block' : 'none';
+  });
+  
+  // Cerrar menú al hacer clic fuera
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#dbMenu') && !e.target.closest('#dbMenuPanel')) {
+      dbMenuPanel.style.display = 'none';
+    }
+  });
+  
+  // Exportar base de datos
+  exportBtn.addEventListener('click', () => {
+    const success = exportDatabase();
+    const status = document.getElementById('dbStatus');
+    
+    if (success) {
+      status.textContent = '✅ Base de datos descargada exitosamente';
+      status.style.color = 'green';
+    } else {
+      status.textContent = '❌ Error al descargar base de datos';
+      status.style.color = 'red';
+    }
+    
+    setTimeout(() => {
+      status.textContent = '';
+    }, 3000);
+  });
+  
+  // Importar base de datos
+  importBtn.addEventListener('click', () => {
+    importFile.click();
+  });
+  
+  importFile.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const success = await importDatabase(file);
+    const status = document.getElementById('dbStatus');
+    
+    if (success) {
+      status.textContent = '✅ Base de datos cargada exitosamente';
+      status.style.color = 'green';
+      
+      // Recargar UI
+      setTimeout(() => {
+        renderUI();
+        dbMenuPanel.style.display = 'none';
+      }, 1000);
+    } else {
+      status.textContent = '❌ Error al cargar base de datos';
+      status.style.color = 'red';
+    }
+    
+    setTimeout(() => {
+      status.textContent = '';
+    }, 3000);
+    
+    importFile.value = '';
+  });
+  
+  // Limpiar base de datos
+  clearBtn.addEventListener('click', () => {
+    const success = clearDatabase();
+    
+    if (success) {
+      const status = document.getElementById('dbStatus');
+      status.textContent = '✅ Base de datos limpiada';
+      status.style.color = 'green';
+      
+      setTimeout(() => {
+        renderUI();
+        dbMenuPanel.style.display = 'none';
+      }, 1000);
+    }
+  });
 }
 
 // ========================================
@@ -93,27 +169,106 @@ function handleAddAccount(e) {
     return;
   }
   
-  const account = {
-    id: Date.now(),
-    name,
-    type,
-    balance,
-    costType,
-    currency,
-    createdAt: new Date().toISOString()
-  };
+  // Verificar si la cuenta ya existe
+  const accounts = getAccounts();
+  if (accounts.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+    alert('❌ Esta cuenta ya existe');
+    return;
+  }
   
-  accounts.push(account);
-  saveDataToLocalStorage();
+  const success = addAccount(name, type, balance, costType, currency);
   
-  document.getElementById('accountForm').reset();
+  if (success) {
+    document.getElementById('accountForm').reset();
+    renderUI();
+    alert('✅ Cuenta agregada exitosamente');
+  } else {
+    alert('❌ Error al agregar cuenta');
+  }
+}
+
+// ========================================
+// TRANSACCIONES
+// ========================================
+
+function handleAddTransaction(e) {
+  e.preventDefault();
+  
+  const date = document.getElementById('transactionDate').value;
+  const description = document.getElementById('transactionDescription').value.trim();
+  const accountId = parseInt(document.getElementById('transactionAccountSelect').value);
+  const movement = document.getElementById('transactionMovement').value;
+  const amount = parseFloat(document.getElementById('transactionAmount').value) || 0;
+  
+  if (!date || !description || !accountId || !movement || amount <= 0) {
+    alert('Por favor completa todos los campos correctamente');
+    return;
+  }
+  
+  const accounts = getAccounts();
+  const account = accounts.find(a => a.id === accountId);
+  
+  if (!account) {
+    alert('Cuenta no encontrada');
+    return;
+  }
+  
+  // Actualizar saldo de la cuenta
+  const newBalance = movement === 'Entrada' 
+    ? account.balance + amount 
+    : account.balance - amount;
+  
+  updateAccountBalance(accountId, newBalance);
+  
+  // Agregar transacción
+  const success = addTransaction(date, description, accountId, account.name, movement, amount);
+  
+  if (success) {
+    document.getElementById('transactionForm').reset();
+    setDefaultDate();
+    renderUI();
+    alert('✅ Transacción registrada exitosamente');
+  } else {
+    alert('❌ Error al registrar transacción');
+  }
+}
+
+function deleteTransactionHandler(transactionId) {
+  if (confirm('¿Estás seguro de que deseas eliminar esta transacción?')) {
+    // Obtener la transacción para revertir el saldo
+    const transactions = getTransactions();
+    const transaction = transactions.find(t => t.id === transactionId);
+    
+    if (transaction) {
+      const accounts = getAccounts();
+      const account = accounts.find(a => a.id === transaction.accountId);
+      
+      if (account) {
+        const newBalance = transaction.movement === 'Entrada'
+          ? account.balance - transaction.amount
+          : account.balance + transaction.amount;
+        
+        updateAccountBalance(transaction.accountId, newBalance);
+      }
+    }
+    
+    deleteTransaction(transactionId);
+    renderUI();
+  }
+}
+
+// ========================================
+// RENDERIZADO DE UI
+// ========================================
+
+function renderUI() {
   renderAccounts();
+  renderTransactions();
   updateFinancialStatements();
-  
-  alert('✅ Cuenta agregada exitosamente');
 }
 
 function renderAccounts() {
+  const accounts = getAccounts();
   const tbody = document.querySelector('#accountsTable tbody');
   
   if (accounts.length === 0) {
@@ -135,6 +290,7 @@ function renderAccounts() {
 }
 
 function updateTransactionSelect() {
+  const accounts = getAccounts();
   const select = document.getElementById('transactionAccountSelect');
   const currentValue = select.value;
   
@@ -144,61 +300,8 @@ function updateTransactionSelect() {
   select.value = currentValue;
 }
 
-// ========================================
-// TRANSACCIONES
-// ========================================
-
-function handleAddTransaction(e) {
-  e.preventDefault();
-  
-  const date = document.getElementById('transactionDate').value;
-  const description = document.getElementById('transactionDescription').value.trim();
-  const accountId = parseInt(document.getElementById('transactionAccountSelect').value);
-  const movement = document.getElementById('transactionMovement').value;
-  const amount = parseFloat(document.getElementById('transactionAmount').value) || 0;
-  
-  if (!date || !description || !accountId || !movement || amount <= 0) {
-    alert('Por favor completa todos los campos correctamente');
-    return;
-  }
-  
-  const account = accounts.find(a => a.id === accountId);
-  if (!account) {
-    alert('Cuenta no encontrada');
-    return;
-  }
-  
-  // Actualizar saldo de la cuenta
-  if (movement === 'Entrada') {
-    account.balance += amount;
-  } else {
-    account.balance -= amount;
-  }
-  
-  const transaction = {
-    id: Date.now(),
-    date,
-    description,
-    accountId,
-    accountName: account.name,
-    movement,
-    amount,
-    createdAt: new Date().toISOString()
-  };
-  
-  transactions.push(transaction);
-  saveDataToLocalStorage();
-  
-  document.getElementById('transactionForm').reset();
-  setDefaultDate();
-  renderAccounts();
-  renderTransactions();
-  updateFinancialStatements();
-  
-  alert('✅ Transacción registrada exitosamente');
-}
-
 function renderTransactions() {
+  const transactions = getTransactions();
   const tbody = document.querySelector('#transactionsTable tbody');
   
   if (transactions.length === 0) {
@@ -214,31 +317,10 @@ function renderTransactions() {
       <td>${transaction.movement === 'Entrada' ? '📥 Débito' : '📤 Crédito'}</td>
       <td>${formatCurrency(transaction.amount, 'MXN')}</td>
       <td>
-        <button class="btn-delete" onclick="deleteTransaction(${transaction.id})">🗑️</button>
+        <button class="btn-delete" onclick="deleteTransactionHandler(${transaction.id})">🗑️</button>
       </td>
     </tr>
   `).join('');
-}
-
-function deleteTransaction(transactionId) {
-  const transaction = transactions.find(t => t.id === transactionId);
-  if (!transaction) return;
-  
-  const account = accounts.find(a => a.id === transaction.accountId);
-  if (account) {
-    if (transaction.movement === 'Entrada') {
-      account.balance -= transaction.amount;
-    } else {
-      account.balance += transaction.amount;
-    }
-  }
-  
-  transactions = transactions.filter(t => t.id !== transactionId);
-  saveDataToLocalStorage();
-  
-  renderAccounts();
-  renderTransactions();
-  updateFinancialStatements();
 }
 
 // ========================================
@@ -246,6 +328,9 @@ function deleteTransaction(transactionId) {
 // ========================================
 
 function updateFinancialStatements() {
+  const accounts = getAccounts();
+  const transactions = getTransactions();
+  
   // Calcular totales por tipo de cuenta
   const assets = accounts
     .filter(a => a.type === 'Activo')
@@ -294,6 +379,8 @@ function updateFinancialStatements() {
 }
 
 function renderTAccounts() {
+  const accounts = getAccounts();
+  const transactions = getTransactions();
   const container = document.getElementById('accountsGrid');
   
   if (accounts.length === 0) {

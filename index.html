@@ -83,8 +83,23 @@
         <h1>Contabilidad con Cuentas T</h1>
         <p>Herramienta profesional desarrollada por <strong>Luis Antonio Canales Guerrero</strong> para registrar cuentas, transacciones de débito y crédito, y visualizar estados financieros en tiempo real.</p>
       </div>
-      <button class="theme-toggle" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+      <div class="header-buttons">
+        <button class="theme-toggle" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+        <button class="db-button" id="dbMenu" title="Base de datos" aria-label="Base de datos">💾</button>
+      </div>
     </header>
+
+    <!-- Database Menu -->
+    <div class="db-menu" id="dbMenuPanel" style="display: none;">
+      <div class="db-menu-content">
+        <h3>Gestión de Base de Datos</h3>
+        <button id="exportBtn" class="btn-primary">📥 Descargar Base de Datos</button>
+        <button id="importBtn" class="btn-primary">📤 Cargar Base de Datos</button>
+        <button id="clearBtn" class="btn-danger">🗑️ Limpiar Todo</button>
+        <input type="file" id="importFile" accept=".db,.sqlite" style="display: none;" />
+        <p id="dbStatus" class="db-status"></p>
+      </div>
+    </div>
 
     <!-- Add Account Section -->
     <div class="card">
@@ -285,7 +300,11 @@
     </div>
   </div>
 
+  <!-- SQLite WASM -->
+  <script src="https://sql.js.org/dist/sql-wasm.js"></script>
+  
   <!-- Scripts -->
+  <script src="js/db.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
