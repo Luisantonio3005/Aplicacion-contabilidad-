@@ -578,3 +578,80 @@ html[data-theme="dark"] textarea:focus {
   font-size: 0.9rem;
   text-align: center;
 }
+
+
+.auth-panel {
+  background-color: var(--bg-primary);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  margin-top: 1rem;
+}
+
+.auth-logged-in {
+  background-color: #dcfce7;
+  border-color: #10b981;
+}
+
+html[data-theme="dark"] .auth-logged-in {
+  background-color: #064e3b;
+  border-color: #10b981;
+}
+
+.auth-logged-in p {
+  color: #065f46;
+  margin: 0 0 1rem 0;
+}
+
+html[data-theme="dark"] .auth-logged-in p {
+  color: #86efac;
+}
+
+.auth-logged-out {
+  background-color: var(--bg-secondary);
+}
+
+.auth-logged-out h3 {
+  margin-top: 0;
+  color: var(--text-primary);
+}
+
+#authForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+#authForm .form-group {
+  grid-column: 1 / -1;
+}
+
+#authForm .form-group:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.btn-secondary {
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--table-row-even-bg);
+  border-color: var(--button-primary);
+}
+
+@media (max-width: 768px) {
+  #authForm {
+    grid-template-columns: 1fr;
+  }
+
+  #authForm .form-group:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
