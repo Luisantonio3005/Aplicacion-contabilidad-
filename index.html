@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Aplicación de Contabilidad con Cuentas T — registra cuentas, transacciones y visualiza estados financieros en tiempo real. Desarrollada por Luis Antonio Canales Guerrero." />
-  <meta name="keywords" content="contabilidad, cuentas T, estados financieros, balance general, estado de resultados, herramienta contable, Luis Antonio Canales Guerrero" />
+  <meta name="description" content="Aplicación de Contabilidad Profesional — registra cuentas contables, transacciones y visualiza estados financieros en tiempo real. Desarrollada por Luis Antonio Canales Guerrero" />
+  <meta name="keywords" content="contabilidad, cuentas contables, activos, pasivos, patrimonio, estados financieros, balance general, estado de resultados, herramienta contable" />
   <meta name="author" content="Luis Antonio Canales Guerrero" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#2563eb" />
@@ -14,15 +14,15 @@
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:url"         content="https://luisantonio3005.github.io/Aplicacion-contabilidad-/" />
-  <meta property="og:title"       content="Contabilidad con Cuentas T — Luis Antonio Canales Guerrero" />
-  <meta property="og:description" content="Herramienta profesional de contabilidad con Cuentas T, estados financieros y análisis en tiempo real." />
-  <meta property="og:site_name"   content="Contabilidad con Cuentas T" />
+  <meta property="og:title"       content="Contabilidad Profesional — Luis Antonio Canales Guerrero" />
+  <meta property="og:description" content="Herramienta profesional de contabilidad con estados financieros y análisis en tiempo real." />
+  <meta property="og:site_name"   content="Contabilidad Profesional" />
   <meta property="og:locale"      content="es_MX" />
 
   <!-- Twitter -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="Contabilidad con Cuentas T — Luis Antonio Canales Guerrero" />
-  <meta name="twitter:description" content="Herramienta profesional de contabilidad con Cuentas T, estados financieros y análisis en tiempo real." />
+  <meta name="twitter:title"       content="Contabilidad Profesional — Luis Antonio Canales Guerrero" />
+  <meta name="twitter:description" content="Herramienta profesional de contabilidad con estados financieros y análisis en tiempo real." />
 
   <!-- Google Search Console -->
   <meta name="google-site-verification" content="google3386d1ae94d341bf" />
@@ -37,8 +37,8 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "Contabilidad con Cuentas T",
-    "description": "Aplicación profesional de contabilidad con Cuentas T, estados financieros y análisis en tiempo real",
+    "name": "Contabilidad Profesional",
+    "description": "Aplicación profesional de contabilidad con estados financieros y análisis en tiempo real",
     "url": "https://luisantonio3005.github.io/Aplicacion-contabilidad-/",
     "applicationCategory": "BusinessApplication",
     "creator": {
@@ -54,7 +54,7 @@
   }
   </script>
 
-  <title>Contabilidad con Cuentas T — Luis Antonio Canales Guerrero</title>
+  <title>Contabilidad Profesional — Luis Antonio Canales Guerrero</title>
 </head>
 <body>
 <div class="container">
@@ -62,10 +62,10 @@
   <!-- ── ENCABEZADO ─────────────────────────────────────── -->
   <header class="header">
     <div class="header-content">
-      <h1>Contabilidad con Cuentas T</h1>
+      <h1>Contabilidad Profesional</h1>
       <p>Herramienta profesional desarrollada por
-         <strong>Luis Antonio Canales Guerrero</strong> para registrar cuentas,
-         transacciones de débito y crédito, y visualizar estados financieros
+         <strong>Luis Antonio Canales Guerrero</strong> para registrar cuentas contables,
+         transacciones, y visualizar estados financieros completos
          en tiempo real.</p>
     </div>
     <div class="header-buttons">
@@ -93,7 +93,7 @@
 
   <!-- ── 1. AGREGAR CUENTA ──────────────────────────────── -->
   <section class="card" aria-labelledby="sec-accounts">
-    <h2 id="sec-accounts">1. Agregar cuenta</h2>
+    <h2 id="sec-accounts">1. Agregar cuenta contable</h2>
     <form id="accountForm" novalidate>
       <div class="form-grid">
 
@@ -101,22 +101,83 @@
           <label for="accountName">Nombre de la cuenta</label>
           <input type="text" id="accountName" name="account-name"
                  required autocomplete="off"
-                 placeholder="Caja, Ventas, Compras…" />
+                 placeholder="Caja, Bancos, Ventas, Proveedores…" />
+        </div>
+
+        <div class="form-group">
+          <label for="accountCategory">Categoría principal</label>
+          <select id="accountCategory" name="account-category" required>
+            <option value="">— Selecciona una categoría —</option>
+            <optgroup label="ACTIVO">
+              <option value="Activo Circulante">Activo Circulante</option>
+              <option value="Activo No Circulante">Activo No Circulante</option>
+              <option value="Activo Diferido">Activo Diferido</option>
+            </optgroup>
+            <optgroup label="PASIVO">
+              <option value="Pasivo Circulante">Pasivo Circulante</option>
+              <option value="Pasivo No Circulante">Pasivo No Circulante</option>
+              <option value="Pasivo Diferido">Pasivo Diferido</option>
+            </optgroup>
+            <optgroup label="PATRIMONIO">
+              <option value="Capital Social">Capital Social</option>
+              <option value="Utilidades">Utilidades</option>
+            </optgroup>
+            <optgroup label="INGRESOS">
+              <option value="Ingresos Operacionales">Ingresos Operacionales</option>
+              <option value="Ingresos No Operacionales">Ingresos No Operacionales</option>
+            </optgroup>
+            <optgroup label="GASTOS">
+              <option value="Gastos Operacionales">Gastos Operacionales</option>
+              <option value="Gastos No Operacionales">Gastos No Operacionales</option>
+            </optgroup>
+          </select>
         </div>
 
         <div class="form-group">
           <label for="accountType">Tipo de cuenta</label>
           <select id="accountType" name="account-type" required>
             <option value="">— Selecciona un tipo —</option>
-            <optgroup label="Saldo normal: Débito">
-              <option value="Activo">Activo</option>
-              <option value="Activo Diferido">Activo Diferido</option>
-              <option value="Gasto">Gasto</option>
+            <optgroup label="Cuentas de Activo">
+              <option value="Caja">Caja</option>
+              <option value="Bancos">Bancos</option>
+              <option value="Cuentas por Cobrar">Cuentas por Cobrar</option>
+              <option value="Inventarios">Inventarios</option>
+              <option value="Inversiones Corto Plazo">Inversiones Corto Plazo</option>
+              <option value="Propiedad, Planta y Equipo">Propiedad, Planta y Equipo</option>
+              <option value="Inversiones Largo Plazo">Inversiones Largo Plazo</option>
+              <option value="Depreciación Acumulada">Depreciación Acumulada</option>
+              <option value="Amortización">Amortización</option>
+              <option value="Gastos Pagados por Anticipado">Gastos Pagados por Anticipado</option>
             </optgroup>
-            <optgroup label="Saldo normal: Crédito">
-              <option value="Pasivo">Pasivo</option>
-              <option value="Patrimonio">Patrimonio</option>
-              <option value="Ingreso">Ingreso</option>
+            <optgroup label="Cuentas de Pasivo">
+              <option value="Proveedores">Proveedores</option>
+              <option value="Cuentas por Pagar">Cuentas por Pagar</option>
+              <option value="Impuestos por Pagar">Impuestos por Pagar</option>
+              <option value="Salarios por Pagar">Salarios por Pagar</option>
+              <option value="Préstamos Corto Plazo">Préstamos Corto Plazo</option>
+              <option value="Préstamos Largo Plazo">Préstamos Largo Plazo</option>
+              <option value="Hipotecas por Pagar">Hipotecas por Pagar</option>
+              <option value="Ingresos Diferidos">Ingresos Diferidos</option>
+            </optgroup>
+            <optgroup label="Cuentas de Patrimonio">
+              <option value="Capital Aportado">Capital Aportado</option>
+              <option value="Ganancias Retenidas">Ganancias Retenidas</option>
+              <option value="Pérdidas Acumuladas">Pérdidas Acumuladas</option>
+            </optgroup>
+            <optgroup label="Cuentas de Ingresos">
+              <option value="Ventas">Ventas</option>
+              <option value="Servicios Prestados">Servicios Prestados</option>
+              <option value="Intereses Ganados">Intereses Ganados</option>
+              <option value="Otras Ingresos">Otras Ingresos</option>
+            </optgroup>
+            <optgroup label="Cuentas de Gastos">
+              <option value="Compras">Compras</option>
+              <option value="Salarios">Salarios</option>
+              <option value="Alquileres">Alquileres</option>
+              <option value="Servicios">Servicios</option>
+              <option value="Depreciación">Depreciación</option>
+              <option value="Intereses Pagados">Intereses Pagados</option>
+              <option value="Otros Gastos">Otros Gastos</option>
             </optgroup>
           </select>
         </div>
@@ -128,20 +189,13 @@
         </div>
 
         <div class="form-group">
-          <label for="accountCostType">Clasificación</label>
-          <select id="accountCostType" name="account-cost-type">
-            <option value="Fijo">Fijo</option>
-            <option value="Variable">Variable</option>
-            <option value="Pasivo">Pasivo</option>
-          </select>
-        </div>
-
-        <div class="form-group">
           <label for="accountCurrency">Moneda</label>
           <select id="accountCurrency" name="account-currency">
             <option value="MXN">MXN — Peso mexicano</option>
             <option value="USD">USD — Dólar</option>
             <option value="EUR">EUR — Euro</option>
+            <option value="COP">COP — Peso colombiano</option>
+            <option value="ARS">ARS — Peso argentino</option>
           </select>
         </div>
 
@@ -155,21 +209,22 @@
 
   <!-- ── 2. LISTA DE CUENTAS ────────────────────────────── -->
   <section class="card" aria-labelledby="sec-list">
-    <h2 id="sec-list">2. Lista de cuentas</h2>
+    <h2 id="sec-list">2. Lista de cuentas contables</h2>
     <div class="table-wrapper">
       <table id="accountsTable">
         <thead>
           <tr>
             <th>Cuenta</th>
+            <th>Categoría</th>
             <th>Tipo</th>
-            <th>Saldo normal</th>
-            <th>Clasificación</th>
-            <th>Saldo</th>
+            <th>Saldo Inicial</th>
+            <th>Saldo Actual</th>
+            <th>Moneda</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td colspan="6" class="empty-state">No hay cuentas registradas</td></tr>
+          <tr><td colspan="7" class="empty-state">No hay cuentas registradas</td></tr>
         </tbody>
       </table>
     </div>
@@ -177,7 +232,7 @@
 
   <!-- ── 3. REGISTRAR TRANSACCIÓN ───────────────────────── -->
   <section class="card" aria-labelledby="sec-tx">
-    <h2 id="sec-tx">3. Registrar transacción</h2>
+    <h2 id="sec-tx">3. Registrar movimiento contable</h2>
     <form id="transactionForm" novalidate>
       <div class="form-grid">
 
@@ -190,7 +245,7 @@
           <label for="transactionDescription">Descripción</label>
           <input type="text" id="transactionDescription" name="transaction-description"
                  required autocomplete="off"
-                 placeholder="Ej. Venta de productos" />
+                 placeholder="Ej. Venta de productos a cliente" />
         </div>
 
         <div class="form-group">
@@ -201,11 +256,11 @@
         </div>
 
         <div class="form-group">
-          <label for="transactionMovement">Movimiento</label>
+          <label for="transactionMovement">Tipo de movimiento</label>
           <select id="transactionMovement" name="transaction-movement" required>
             <option value="">— Selecciona —</option>
-            <option value="Entrada"> 📥 Entrada </option>
-            <option value="Salida" > 📤 Salida </option>
+            <option value="Entrada"> 📥 Aumenta </option>
+            <option value="Salida" > 📤 Disminuye </option>
           </select>
         </div>
 
@@ -216,7 +271,7 @@
         </div>
 
         <div class="form-group" style="justify-content:flex-end">
-          <button type="submit" class="btn-primary">✅ Registrar transacción</button>
+          <button type="submit" class="btn-primary">✅ Registrar movimiento</button>
         </div>
 
       </div>
@@ -225,35 +280,32 @@
 
   <!-- ── 4. TRANSACCIONES REGISTRADAS ──────────────────── -->
   <section class="card" aria-labelledby="sec-txlist">
-    <h2 id="sec-txlist">4. Transacciones registradas</h2>
+    <h2 id="sec-txlist">4. Movimientos registrados</h2>
     <div class="table-wrapper">
       <table id="transactionsTable">
         <thead>
           <tr>
             <th>Fecha</th>
             <th>Descripción</th>
-            <th>Cuenta / Tipo</th>
+            <th>Cuenta</th>
+            <th>Categoría</th>
             <th>Movimiento</th>
             <th>Monto</th>
-            <th>Efecto en saldo</th>
+            <th>Saldo después</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td colspan="7" class="empty-state">No hay transacciones registradas</td></tr>
+          <tr><td colspan="8" class="empty-state">No hay movimientos registrados</td></tr>
         </tbody>
       </table>
     </div>
   </section>
 
-  <!-- ── 5. CUENTAS T ───────────────────────────────────── -->
-  <section class="card" aria-labelledby="sec-t">
-    <h2 id="sec-t">5. Resumen de Cuentas T</h2>
-    <div class="grid-2" id="accountsGrid"></div>
-    <div class="summary-box">
-      <div><strong>Total Entrada:</strong>  <span id="totalDebit">$ 0.00</span></div>
-      <div><strong>Total Salida:</strong> <span id="totalCredit">$ 0.00</span></div>
-    </div>
+  <!-- ── 5. RESUMEN DE CUENTAS ───────────────────────────── -->
+  <section class="card" aria-labelledby="sec-summary">
+    <h2 id="sec-summary">5. Resumen de cuentas</h2>
+    <div class="summary-grid" id="summaryGrid"></div>
   </section>
 
   <!-- ── 6. ESTADOS FINANCIEROS ─────────────────────────── -->
@@ -261,24 +313,48 @@
 
     <div class="income-card">
       <h2>Estado de Resultados</h2>
-      <div class="stat"><span>Ingresos:</span>        <span id="income">$ 0.00</span></div>
-      <div class="stat"><span>Gastos:</span>          <span id="expenses">$ 0.00</span></div>
+      <div class="statement-section">
+        <h3>Ingresos</h3>
+        <div class="stat"><span>Ingresos Operacionales:</span> <span id="operIncome">$ 0.00</span></div>
+        <div class="stat"><span>Ingresos No Operacionales:</span> <span id="nonOperIncome">$ 0.00</span></div>
+      </div>
+      <div class="statement-section">
+        <h3>Gastos</h3>
+        <div class="stat"><span>Gastos Operacionales:</span> <span id="operExpenses">$ 0.00</span></div>
+        <div class="stat"><span>Gastos No Operacionales:</span> <span id="nonOperExpenses">$ 0.00</span></div>
+      </div>
       <div class="stat divider">
-        <span>Utilidad / Pérdida:</span>
-        <span id="netIncome">$ 0.00</span>
+        <span><strong>Utilidad / Pérdida Neta:</strong></span>
+        <span id="netIncome" style="font-weight: bold;">$ 0.00</span>
       </div>
     </div>
 
     <div class="income-card">
       <h2>Balance General</h2>
-      <div class="stat"><span>Activos:</span>           <span id="assets">$ 0.00</span></div>
-      <div class="stat"><span>Pasivos:</span>           <span id="liabilities">$ 0.00</span></div>
-      <div class="stat"><span>Patrimonio:</span>        <span id="equity">$ 0.00</span></div>
-      <div class="stat divider">
-        <span>Pasivos + Patrimonio:</span>
+      <div class="statement-section">
+        <h3>ACTIVOS</h3>
+        <div class="stat"><span>Activos Circulantes:</span> <span id="currentAssets">$ 0.00</span></div>
+        <div class="stat"><span>Activos No Circulantes:</span> <span id="nonCurrentAssets">$ 0.00</span></div>
+        <div class="stat"><span>Activos Diferidos:</span> <span id="deferredAssets">$ 0.00</span></div>
+        <div class="stat divider"><span><strong>Total Activos:</strong></span> <span id="totalAssets">$ 0.00</span></div>
+      </div>
+      <div class="statement-section">
+        <h3>PASIVOS</h3>
+        <div class="stat"><span>Pasivos Circulantes:</span> <span id="currentLiabilities">$ 0.00</span></div>
+        <div class="stat"><span>Pasivos No Circulantes:</span> <span id="nonCurrentLiabilities">$ 0.00</span></div>
+        <div class="stat divider"><span><strong>Total Pasivos:</strong></span> <span id="totalLiabilities">$ 0.00</span></div>
+      </div>
+      <div class="statement-section">
+        <h3>PATRIMONIO</h3>
+        <div class="stat"><span>Capital Social:</span> <span id="capitalStock">$ 0.00</span></div>
+        <div class="stat"><span>Utilidades Retenidas:</span> <span id="retainedEarnings">$ 0.00</span></div>
+        <div class="stat divider"><span><strong>Total Patrimonio:</strong></span> <span id="totalEquity">$ 0.00</span></div>
+      </div>
+      <div class="stat divider" style="margin-top: 20px; border-top: 2px solid #ddd; padding-top: 10px;">
+        <span><strong>Pasivos + Patrimonio:</strong></span>
         <span id="totalLiabilitiesEquity">$ 0.00</span>
       </div>
-      <p id="balanceCheck" class="balance-ok">✅ La ecuación contable cuadra</p>
+      <p id="balanceCheck" class="balance-ok">✅ Ecuación contable: Activos = Pasivos + Patrimonio</p>
     </div>
 
   </div>
