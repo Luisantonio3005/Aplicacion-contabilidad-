@@ -1,49 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- Meta Tags Básicos -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Aplicación de Contabilidad con Cuentas T - Registra cuentas, transacciones de débito y crédito, y visualiza estados financieros en tiempo real. Desarrollada por Luis Antonio Canales Guerrero." />
+  <meta name="description" content="Aplicación de Contabilidad con Cuentas T — registra cuentas, transacciones de débito y crédito, y visualiza estados financieros en tiempo real. Desarrollada por Luis Antonio Canales Guerrero." />
   <meta name="keywords" content="contabilidad, cuentas T, estados financieros, balance general, estado de resultados, herramienta contable, Luis Antonio Canales Guerrero" />
   <meta name="author" content="Luis Antonio Canales Guerrero" />
-  <meta name="creator" content="Luis Antonio Canales Guerrero" />
-  <meta name="publisher" content="Luis Antonio Canales Guerrero" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://luisantonio3005.github.io/Aplicacion-contabilidad-/" />
-  <meta property="og:title" content="Contabilidad con Cuentas T - Luis Antonio Canales Guerrero" />
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://luisantonio3005.github.io/Aplicacion-contabilidad-/" />
+  <meta property="og:title"       content="Contabilidad con Cuentas T — Luis Antonio Canales Guerrero" />
   <meta property="og:description" content="Herramienta profesional de contabilidad con Cuentas T, estados financieros y análisis en tiempo real." />
-  <meta property="og:site_name" content="Contabilidad con Cuentas T" />
-  <meta property="og:locale" content="es_ES" />
-  
+  <meta property="og:site_name"   content="Contabilidad con Cuentas T" />
+  <meta property="og:locale"      content="es_MX" />
+
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Contabilidad con Cuentas T - Luis Antonio Canales Guerrero" />
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Contabilidad con Cuentas T — Luis Antonio Canales Guerrero" />
   <meta name="twitter:description" content="Herramienta profesional de contabilidad con Cuentas T, estados financieros y análisis en tiempo real." />
-  
-  <!-- LinkedIn -->
-  <meta name="linkedin:creator" content="Luis Antonio Canales Guerrero" />
-  <meta name="linkedin:url" content="https://www.linkedin.com/in/luis-antonio-canales-guerrero-b3565b280" />
-  
-  <!-- Google Search Console Verification -->
+
+  <!-- Google Search Console -->
   <meta name="google-site-verification" content="google3386d1ae94d341bf" />
-  
-  <!-- Canonical URL -->
+
   <link rel="canonical" href="https://luisantonio3005.github.io/Aplicacion-contabilidad-/" />
-  
-  <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' font-weight='bold' fill='%232563eb'>T</text></svg>" />
-  
-  <!-- Stylesheets -->
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' font-weight='bold' fill='%232563eb'>T</text></svg>" />
   <link rel="stylesheet" href="css/styles.css" />
-  
-  <!-- Structured Data (JSON-LD) -->
+
+  <!-- JSON-LD -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -61,251 +50,252 @@
         "https://www.linkedin.com/in/luis-antonio-canales-guerrero-b3565b280"
       ]
     },
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "5",
-      "ratingCount": "1"
-    }
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   }
   </script>
-  
-  <title>Contabilidad con Cuentas T - Luis Antonio Canales Guerrero</title>
+
+  <title>Contabilidad con Cuentas T — Luis Antonio Canales Guerrero</title>
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <div class="header-content">
-        <h1>Contabilidad con Cuentas T</h1>
-        <p>Herramienta profesional desarrollada por <strong>Luis Antonio Canales Guerrero</strong> para registrar cuentas, transacciones de débito y crédito, y visualizar estados financieros en tiempo real.</p>
-      </div>
-      <div class="header-buttons">
-        <button class="theme-toggle" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
-        <button class="db-button" id="dbMenu" title="Base de datos" aria-label="Base de datos">💾</button>
-      </div>
-    </header>
+<div class="container">
 
-    <!-- Database Menu -->
-    <div class="db-menu" id="dbMenuPanel" style="display: none;">
-      <div class="db-menu-content">
-        <h3>Gestión de Base de Datos</h3>
-        <button id="exportBtn" class="btn-primary">📥 Descargar Base de Datos</button>
-        <button id="importBtn" class="btn-primary">📤 Cargar Base de Datos</button>
-        <button id="clearBtn" class="btn-danger">🗑️ Limpiar Todo</button>
-        <input type="file" id="importFile" accept=".db,.sqlite" style="display: none;" />
-        <p id="dbStatus" class="db-status"></p>
-      </div>
+  <!-- ── ENCABEZADO ─────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-content">
+      <h1>Contabilidad con Cuentas T</h1>
+      <p>Herramienta profesional desarrollada por
+         <strong>Luis Antonio Canales Guerrero</strong> para registrar cuentas,
+         transacciones de débito y crédito, y visualizar estados financieros
+         en tiempo real.</p>
     </div>
-
-    <!-- Add Account Section -->
-    <div class="card">
-      <h2>1. Agregar cuenta</h2>
-      <form id="accountForm">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="accountName">Nombre de la cuenta</label>
-            <input type="text" id="accountName" name="account-name" required placeholder="Caja, Ventas, Compras..." />
-          </div>
-          <div class="form-group">
-            <label for="accountType">Tipo de cuenta</label>
-            <select id="accountType" name="account-type" required>
-              <option value="">Selecciona un tipo</option>
-              <option value="Activo">Activo</option>
-              <option value="Pasivo">Pasivo</option>
-              <option value="Patrimonio">Patrimonio</option>
-              <option value="Ingreso">Ingreso</option>
-              <option value="Gasto">Gasto</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="accountBalance">Saldo inicial</label>
-            <input type="number" id="accountBalance" name="account-balance" min="0" step="0.01" value="0" />
-          </div>
-          <div class="form-group">
-            <label for="accountCostType">Clasificación</label>
-            <select id="accountCostType" name="account-cost-type">
-              <option value="Fijo">Fijo</option>
-              <option value="Variable">Variable</option>
-              <option value="Pasivo">Pasivo</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="accountCurrency">Moneda</label>
-            <select id="accountCurrency" name="account-currency">
-              <option value="MXN">MXN</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-            </select>
-          </div>
-          <div class="form-group" style="justify-content: flex-end;">
-            <button type="submit" class="btn-primary">Agregar cuenta</button>
-          </div>
-        </div>
-      </form>
+    <div class="header-buttons">
+      <button class="theme-toggle" id="themeToggle"
+              title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+      <button class="db-button" id="dbMenu"
+              title="Gestión de base de datos" aria-label="Base de datos">💾</button>
     </div>
+  </header>
 
-    <!-- Accounts List -->
-    <div class="card">
-      <h2>2. Lista de cuentas</h2>
-      <div class="table-wrapper">
-        <table id="accountsTable">
-          <thead>
-            <tr>
-              <th>Cuenta</th>
-              <th>Tipo</th>
-              <th>Clasificación</th>
-              <th>Saldo</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="5" class="empty-state">No hay cuentas registradas</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Add Transaction -->
-    <div class="card">
-      <h2>3. Registrar transacción</h2>
-      <form id="transactionForm">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="transactionDate">Fecha</label>
-            <input type="date" id="transactionDate" name="transaction-date" required />
-          </div>
-          <div class="form-group">
-            <label for="transactionDescription">Descripción</label>
-            <input type="text" id="transactionDescription" name="transaction-description" required placeholder="Venta de productos" />
-          </div>
-          <div class="form-group">
-            <label for="transactionAccountSelect">Cuenta</label>
-            <select id="transactionAccountSelect" name="transaction-account" required>
-              <option value="">Seleccione cuenta</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="transactionMovement">Movimiento</label>
-            <select id="transactionMovement" name="transaction-movement" required>
-              <option value="">Selecciona movimiento</option>
-              <option value="Entrada">Entrada (Débito)</option>
-              <option value="Salida">Salida (Crédito)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="transactionAmount">Monto</label>
-            <input type="number" id="transactionAmount" name="transaction-amount" min="0.01" step="0.01" required placeholder="0.00" />
-          </div>
-          <div class="form-group" style="justify-content: flex-end;">
-            <button type="submit" class="btn-primary">Registrar transacción</button>
-          </div>
-        </div>
-      </form>
-    </div>
-
-    <!-- Transactions List -->
-    <div class="card">
-      <h2>4. Transacciones registradas</h2>
-      <div class="table-wrapper">
-        <table id="transactionsTable">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Descripción</th>
-              <th>Cuenta</th>
-              <th>Movimiento</th>
-              <th>Monto</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="6" class="empty-state">No hay transacciones registradas</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Summary -->
-    <div class="card">
-      <h2>5. Resumen de Cuentas T</h2>
-      <div class="grid-2" id="accountsGrid"></div>
-      <div class="summary-box">
-        <div>
-          <strong>Total Débito:</strong>
-          <span id="totalDebit">0.00</span>
-        </div>
-        <div>
-          <strong>Total Crédito:</strong>
-          <span id="totalCredit">0.00</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Financial Statements -->
-    <div class="grid-2">
-      <div class="income-card">
-        <h2>Estado de Resultados</h2>
-        <div class="stat">
-          <span>Ingresos:</span>
-          <span id="income">0.00</span>
-        </div>
-        <div class="stat">
-          <span>Gastos:</span>
-          <span id="expenses">0.00</span>
-        </div>
-        <div class="stat divider">
-          <span>Utilidad / Pérdida:</span>
-          <span id="netIncome">0.00</span>
-        </div>
-      </div>
-
-      <div class="income-card">
-        <h2>Balance General</h2>
-        <div class="stat">
-          <span>Activos:</span>
-          <span id="assets">0.00</span>
-        </div>
-        <div class="stat">
-          <span>Pasivos:</span>
-          <span id="liabilities">0.00</span>
-        </div>
-        <div class="stat">
-          <span>Patrimonio:</span>
-          <span id="equity">0.00</span>
-        </div>
-        <div class="stat divider">
-          <span>Pasivos + Patrimonio:</span>
-          <span id="totalLiabilitiesEquity">0.00</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Contact Section -->
-    <div class="card">
-      <h2>📧 Contacto - Luis Antonio Canales Guerrero</h2>
-      <div class="contact-section">
-        <div class="contact-info">
-          <p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/luis-antonio-canales-guerrero-b3565b280" target="_blank" rel="noopener noreferrer">Ver perfil</a></p>
-          <p><strong>GitHub:</strong> <a href="https://github.com/Luisantonio3005" target="_blank" rel="noopener noreferrer">Ver repositorio</a></p>
-          <p><strong>Email:</strong> <a href="mailto:luisantoniocg3005@outlook.com">luisantoniocg3005@outlook.com</a></p>
-        </div>
-      </div>
+  <!-- ── MENÚ BASE DE DATOS ─────────────────────────────── -->
+  <div class="db-menu" id="dbMenuPanel" style="display:none;" role="dialog" aria-label="Gestión de base de datos">
+    <div class="db-menu-content">
+      <h3>Gestión de Base de Datos</h3>
+      <button id="exportBtn" class="btn-primary">📥 Descargar copia</button>
+      <button id="importBtn" class="btn-primary">📤 Cargar copia</button>
+      <button id="clearBtn"  class="btn-danger" >🗑️ Limpiar todo</button>
+      <input  type="file" id="importFile" accept=".db,.sqlite" style="display:none" />
+      <p id="dbStatus" class="db-status" aria-live="polite"></p>
     </div>
   </div>
 
-  <!-- SQLite WASM -->
-  <script src="https://sql.js.org/dist/sql-wasm.js"></script>
-  
-  <!-- Scripts -->
-  <script src="js/db.js"></script>
-  <script src="js/app.js"></script>
+  <!-- ── 1. AGREGAR CUENTA ──────────────────────────────── -->
+  <section class="card" aria-labelledby="sec-accounts">
+    <h2 id="sec-accounts">1. Agregar cuenta</h2>
+    <form id="accountForm" novalidate>
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="accountName">Nombre de la cuenta</label>
+          <input type="text" id="accountName" name="account-name"
+                 required autocomplete="off"
+                 placeholder="Caja, Ventas, Compras…" />
+        </div>
+
+        <div class="form-group">
+          <label for="accountType">Tipo de cuenta</label>
+          <select id="accountType" name="account-type" required>
+            <option value="">— Selecciona un tipo —</option>
+            <option value="Activo">Activo</option>
+            <option value="Pasivo">Pasivo</option>
+            <option value="Patrimonio">Patrimonio</option>
+            <option value="Ingreso">Ingreso</option>
+            <option value="Gasto">Gasto</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="accountBalance">Saldo inicial</label>
+          <input type="number" id="accountBalance" name="account-balance"
+                 min="0" step="0.01" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label for="accountCostType">Clasificación</label>
+          <select id="accountCostType" name="account-cost-type">
+            <option value="Fijo">Fijo</option>
+            <option value="Variable">Variable</option>
+            <option value="Pasivo">Pasivo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="accountCurrency">Moneda</label>
+          <select id="accountCurrency" name="account-currency">
+            <option value="MXN">MXN — Peso mexicano</option>
+            <option value="USD">USD — Dólar</option>
+            <option value="EUR">EUR — Euro</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="justify-content:flex-end">
+          <button type="submit" class="btn-primary">➕ Agregar cuenta</button>
+        </div>
+
+      </div>
+    </form>
+  </section>
+
+  <!-- ── 2. LISTA DE CUENTAS ────────────────────────────── -->
+  <section class="card" aria-labelledby="sec-list">
+    <h2 id="sec-list">2. Lista de cuentas</h2>
+    <div class="table-wrapper">
+      <table id="accountsTable">
+        <thead>
+          <tr>
+            <th>Cuenta</th>
+            <th>Tipo</th>
+            <th>Clasificación</th>
+            <th>Saldo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="5" class="empty-state">No hay cuentas registradas</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 3. REGISTRAR TRANSACCIÓN ───────────────────────── -->
+  <section class="card" aria-labelledby="sec-tx">
+    <h2 id="sec-tx">3. Registrar transacción</h2>
+    <form id="transactionForm" novalidate>
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="transactionDate">Fecha</label>
+          <input type="date" id="transactionDate" name="transaction-date" required />
+        </div>
+
+        <div class="form-group">
+          <label for="transactionDescription">Descripción</label>
+          <input type="text" id="transactionDescription" name="transaction-description"
+                 required autocomplete="off"
+                 placeholder="Ej. Venta de productos" />
+        </div>
+
+        <div class="form-group">
+          <label for="transactionAccountSelect">Cuenta</label>
+          <select id="transactionAccountSelect" name="transaction-account" required>
+            <option value="">— Selecciona una cuenta —</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="transactionMovement">Movimiento</label>
+          <select id="transactionMovement" name="transaction-movement" required>
+            <option value="">— Selecciona —</option>
+            <option value="Entrada">📥 Débito  (Entrada)</option>
+            <option value="Salida" >📤 Crédito (Salida)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="transactionAmount">Monto</label>
+          <input type="number" id="transactionAmount" name="transaction-amount"
+                 min="0.01" step="0.01" required placeholder="0.00" />
+        </div>
+
+        <div class="form-group" style="justify-content:flex-end">
+          <button type="submit" class="btn-primary">✅ Registrar transacción</button>
+        </div>
+
+      </div>
+    </form>
+  </section>
+
+  <!-- ── 4. TRANSACCIONES REGISTRADAS ──────────────────── -->
+  <section class="card" aria-labelledby="sec-txlist">
+    <h2 id="sec-txlist">4. Transacciones registradas</h2>
+    <div class="table-wrapper">
+      <table id="transactionsTable">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Cuenta</th>
+            <th>Movimiento</th>
+            <th>Monto</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="6" class="empty-state">No hay transacciones registradas</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 5. CUENTAS T ───────────────────────────────────── -->
+  <section class="card" aria-labelledby="sec-t">
+    <h2 id="sec-t">5. Resumen de Cuentas T</h2>
+    <div class="grid-2" id="accountsGrid"></div>
+    <div class="summary-box">
+      <div><strong>Total Débito:</strong>  <span id="totalDebit">$ 0.00</span></div>
+      <div><strong>Total Crédito:</strong> <span id="totalCredit">$ 0.00</span></div>
+    </div>
+  </section>
+
+  <!-- ── 6. ESTADOS FINANCIEROS ─────────────────────────── -->
+  <div class="grid-2">
+
+    <div class="income-card">
+      <h2>Estado de Resultados</h2>
+      <div class="stat"><span>Ingresos:</span>        <span id="income">$ 0.00</span></div>
+      <div class="stat"><span>Gastos:</span>          <span id="expenses">$ 0.00</span></div>
+      <div class="stat divider">
+        <span>Utilidad / Pérdida:</span>
+        <span id="netIncome">$ 0.00</span>
+      </div>
+    </div>
+
+    <div class="income-card">
+      <h2>Balance General</h2>
+      <div class="stat"><span>Activos:</span>           <span id="assets">$ 0.00</span></div>
+      <div class="stat"><span>Pasivos:</span>           <span id="liabilities">$ 0.00</span></div>
+      <div class="stat"><span>Patrimonio:</span>        <span id="equity">$ 0.00</span></div>
+      <div class="stat divider">
+        <span>Pasivos + Patrimonio:</span>
+        <span id="totalLiabilitiesEquity">$ 0.00</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── CONTACTO ───────────────────────────────────────── -->
+  <section class="card">
+    <h2>📧 Contacto</h2>
+    <div class="contact-section">
+      <div class="contact-info">
+        <p><strong>LinkedIn:</strong>
+           <a href="https://www.linkedin.com/in/luis-antonio-canales-guerrero-b3565b280"
+              target="_blank" rel="noopener noreferrer">Luis Antonio Canales Guerrero</a></p>
+        <p><strong>GitHub:</strong>
+           <a href="https://github.com/Luisantonio3005"
+              target="_blank" rel="noopener noreferrer">Luisantonio3005</a></p>
+        <p><strong>Email:</strong>
+           <a href="mailto:luisantoniocg3005@outlook.com">luisantoniocg3005@outlook.com</a></p>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /.container -->
+
+<!-- sql.js — SQLite en WebAssembly -->
+<script src="https://sql.js.org/dist/sql-wasm.js"></script>
+
+<!-- Módulos de la aplicación -->
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

@@ -1,422 +1,428 @@
-// ========================================
-// APLICACIÓN DE CONTABILIDAD CON SQLite
-// ========================================
+// ============================================================
+// APLICACIÓN — CONTABILIDAD CON CUENTAS T
+// ============================================================
+
+'use strict';
+
+// ============================================================
+// ARRANQUE
+// ============================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const dbReady = await initDatabase();
+  const ok = await initDatabase();
 
-  if (!dbReady) {
-    alert('❌ Error al inicializar la base de datos. Revisa la consola para más detalles.');
+  if (!ok) {
+    document.body.innerHTML =
+      '<div style="padding:2rem;color:red;font-family:sans-serif">' +
+      '<h2>❌ Error al iniciar la base de datos</h2>' +
+      '<p>Abre la consola del navegador (F12) para ver el detalle del error.</p>' +
+      '</div>';
     return;
   }
 
   setupTheme();
-  setupEventListeners();
   setupDatabaseMenu();
+  setupForms();
   setDefaultDate();
-  renderUI();
+  renderAll();
 });
 
-// ========================================
-// TEMA OSCURO/CLARO
-// ========================================
+// ============================================================
+// TEMA OSCURO / CLARO
+// ============================================================
 
 function setupTheme() {
-  const themeToggle = document.getElementById('themeToggle');
-  const savedTheme = localStorage.getItem('theme') || 'light';
+  const btn   = document.getElementById('themeToggle');
+  const saved = localStorage.getItem('theme') || 'light';
 
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  updateThemeButton(savedTheme);
+  applyTheme(saved);
 
-  themeToggle.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateThemeButton(newTheme);
+  btn.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', next);
+    applyTheme(next);
   });
 }
 
-function updateThemeButton(theme) {
-  const themeToggle = document.getElementById('themeToggle');
-  themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggle').textContent = theme === 'light' ? '🌙' : '☀️';
 }
 
-// ========================================
+// ============================================================
 // MENÚ DE BASE DE DATOS
-// ========================================
+// ============================================================
 
 function setupDatabaseMenu() {
-  const dbMenu = document.getElementById('dbMenu');
-  const dbMenuPanel = document.getElementById('dbMenuPanel');
-  const exportBtn = document.getElementById('exportBtn');
-  const importBtn = document.getElementById('importBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const importFile = document.getElementById('importFile');
+  const btnDB    = document.getElementById('dbMenu');
+  const panel    = document.getElementById('dbMenuPanel');
+  const btnExp   = document.getElementById('exportBtn');
+  const btnImp   = document.getElementById('importBtn');
+  const btnClear = document.getElementById('clearBtn');
+  const fileIn   = document.getElementById('importFile');
 
-  dbMenu.addEventListener('click', (e) => {
+  // Abrir / cerrar panel
+  btnDB.addEventListener('click', e => {
     e.stopPropagation();
-    dbMenuPanel.style.display = dbMenuPanel.style.display === 'none' ? 'block' : 'none';
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
   });
 
-  // Cerrar menú al hacer clic fuera
-  document.addEventListener('click', (e) => {
+  // Cerrar al hacer clic fuera del panel
+  document.addEventListener('click', e => {
     if (!e.target.closest('#dbMenu') && !e.target.closest('#dbMenuPanel')) {
-      dbMenuPanel.style.display = 'none';
+      panel.style.display = 'none';
     }
   });
 
-  exportBtn.addEventListener('click', () => {
-    const success = exportDatabase();
-    showDbStatus(success ? '✅ Base de datos descargada exitosamente' : '❌ Error al descargar base de datos', success);
+  // Exportar
+  btnExp.addEventListener('click', () => {
+    const ok = exportDatabase();
+    showStatus(ok ? '✅ Descarga iniciada' : '❌ Error al exportar', ok);
   });
 
-  importBtn.addEventListener('click', () => importFile.click());
+  // Importar
+  btnImp.addEventListener('click', () => fileIn.click());
 
-  importFile.addEventListener('change', async (e) => {
+  fileIn.addEventListener('change', async e => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const success = await importDatabase(file);
-    showDbStatus(
-      success ? '✅ Base de datos cargada exitosamente' : '❌ Error al cargar base de datos',
-      success
+    const ok = await importDatabase(file);
+    showStatus(
+      ok ? '✅ Base de datos cargada' : '❌ Archivo inválido o dañado',
+      ok
     );
+    fileIn.value = '';
 
-    if (success) {
+    if (ok) {
       setTimeout(() => {
-        renderUI();
-        dbMenuPanel.style.display = 'none';
-      }, 1000);
+        renderAll();
+        panel.style.display = 'none';
+      }, 800);
     }
-
-    importFile.value = '';
   });
 
-  clearBtn.addEventListener('click', () => {
-    const success = clearDatabase();
-    if (success) {
-      showDbStatus('✅ Base de datos limpiada', true);
+  // Limpiar todo
+  btnClear.addEventListener('click', () => {
+    const ok = clearDatabase();
+    if (ok) {
+      showStatus('✅ Base de datos limpiada', true);
       setTimeout(() => {
-        renderUI();
-        dbMenuPanel.style.display = 'none';
-      }, 1000);
+        renderAll();
+        panel.style.display = 'none';
+      }, 800);
     }
   });
 }
 
-function showDbStatus(message, isSuccess) {
-  const status = document.getElementById('dbStatus');
-  status.textContent = message;
-  status.style.color = isSuccess ? 'green' : 'red';
-  setTimeout(() => { status.textContent = ''; }, 3000);
+function showStatus(msg, ok) {
+  const el = document.getElementById('dbStatus');
+  el.textContent   = msg;
+  el.style.color   = ok ? 'var(--color-success, green)' : 'var(--color-error, red)';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.textContent = ''; }, 3500);
 }
 
-// ========================================
-// EVENT LISTENERS
-// ========================================
+// ============================================================
+// FORMULARIOS
+// ============================================================
 
-function setupEventListeners() {
-  document.getElementById('accountForm').addEventListener('submit', handleAddAccount);
-  document.getElementById('transactionForm').addEventListener('submit', handleAddTransaction);
+function setupForms() {
+  document.getElementById('accountForm').addEventListener('submit', onAddAccount);
+  document.getElementById('transactionForm').addEventListener('submit', onAddTransaction);
 }
 
 function setDefaultDate() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('transactionDate').value = today;
+  const el = document.getElementById('transactionDate');
+  if (el && !el.value) {
+    el.value = new Date().toISOString().slice(0, 10);
+  }
 }
 
-// ========================================
-// CUENTAS
-// ========================================
+// ---- Cuentas ------------------------------------------------
 
-function handleAddAccount(e) {
+function onAddAccount(e) {
   e.preventDefault();
 
-  const name = document.getElementById('accountName').value.trim();
-  const type = document.getElementById('accountType').value;
-  const balance = parseFloat(document.getElementById('accountBalance').value) || 0;
+  const name     = document.getElementById('accountName').value.trim();
+  const type     = document.getElementById('accountType').value;
+  const balance  = parseFloat(document.getElementById('accountBalance').value) || 0;
   const costType = document.getElementById('accountCostType').value;
   const currency = document.getElementById('accountCurrency').value;
 
-  if (!name || !type) {
-    alert('Por favor completa todos los campos obligatorios');
-    return;
-  }
+  if (!name) { showFormError('El nombre de la cuenta es obligatorio.'); return; }
+  if (!type) { showFormError('Selecciona un tipo de cuenta.');           return; }
 
-  const accounts = getAccounts();
-  if (accounts.some(a => a.name.toLowerCase() === name.toLowerCase())) {
-    alert('❌ Esta cuenta ya existe');
-    return;
-  }
+  const { ok, error } = addAccount(name, type, balance, costType, currency);
 
-  const success = addAccount(name, type, balance, costType, currency);
-
-  if (success) {
-    document.getElementById('accountForm').reset();
-    renderUI();
-    alert('✅ Cuenta agregada exitosamente');
+  if (ok) {
+    e.target.reset();
+    renderAll();
   } else {
-    alert('❌ Error al agregar cuenta. Revisa la consola para más detalles.');
+    // Error más descriptivo: cuenta duplicada vs otro error
+    const msg = (error || '').includes('UNIQUE')
+      ? `❌ Ya existe una cuenta con el nombre "${name}".`
+      : `❌ No se pudo agregar la cuenta: ${error}`;
+    alert(msg);
   }
 }
 
-// FIX #5: Función para eliminar cuentas desde la UI
-function deleteAccountHandler(accountId) {
-  const accounts = getAccounts();
-  const account = accounts.find(a => a.id === accountId);
-
+function onDeleteAccount(accountId) {
+  const account = getAccountById(accountId);
   if (!account) return;
 
-  const transactions = getTransactions();
-  const hasTransactions = transactions.some(t => t.accountId === accountId);
+  // Contar cuántas transacciones tiene
+  const txCount = getTransactions().filter(t => t.accountId === accountId).length;
+  const extra   = txCount > 0
+    ? `\nEsta cuenta tiene ${txCount} transacción(es) que también se eliminarán.`
+    : '';
 
-  const warning = hasTransactions
-    ? `⚠️ La cuenta "${account.name}" tiene transacciones asociadas.\n¿Estás seguro? Se eliminarán también todas sus transacciones.`
-    : `¿Estás seguro de que deseas eliminar la cuenta "${account.name}"?`;
+  if (!confirm(`¿Eliminar la cuenta "${account.name}"?${extra}`)) return;
 
-  if (confirm(warning)) {
-    // Eliminar transacciones manualmente ya que el CASCADE depende de PRAGMA
-    transactions
-      .filter(t => t.accountId === accountId)
-      .forEach(t => deleteTransaction(t.id));
-
-    deleteAccount(accountId);
-    renderUI();
+  // deleteAccount usa ON DELETE CASCADE — no hay que borrar transacciones a mano
+  const { ok, error } = deleteAccount(accountId);
+  if (ok) {
+    renderAll();
+  } else {
+    alert(`❌ Error al eliminar: ${error}`);
   }
 }
 
-// ========================================
-// TRANSACCIONES
-// ========================================
+// ---- Transacciones -----------------------------------------
 
-function handleAddTransaction(e) {
+function onAddTransaction(e) {
   e.preventDefault();
 
-  const date = document.getElementById('transactionDate').value;
+  const date        = document.getElementById('transactionDate').value;
   const description = document.getElementById('transactionDescription').value.trim();
-  const accountId = parseInt(document.getElementById('transactionAccountSelect').value);
-  const movement = document.getElementById('transactionMovement').value;
-  // FIX #8: Validación explícita del monto para evitar 0
-  const amount = parseFloat(document.getElementById('transactionAmount').value);
+  const accountId   = parseInt(document.getElementById('transactionAccountSelect').value, 10);
+  const movement    = document.getElementById('transactionMovement').value;
+  const amountRaw   = document.getElementById('transactionAmount').value;
+  const amount      = parseFloat(amountRaw);
 
-  if (!date || !description || !accountId || !movement || isNaN(amount) || amount <= 0) {
-    alert('Por favor completa todos los campos correctamente. El monto debe ser mayor a 0.');
+  // Validaciones
+  if (!date)              { showFormError('Selecciona una fecha.');                    return; }
+  if (!description)       { showFormError('La descripción es obligatoria.');           return; }
+  if (!accountId)         { showFormError('Selecciona una cuenta.');                   return; }
+  if (!movement)          { showFormError('Selecciona Débito o Crédito.');             return; }
+  if (!amountRaw || isNaN(amount) || amount <= 0) {
+    showFormError('El monto debe ser un número mayor a 0.');
     return;
   }
 
-  const accounts = getAccounts();
-  const account = accounts.find(a => a.id === accountId);
+  const account = getAccountById(accountId);
+  if (!account) { alert('Cuenta no encontrada.'); return; }
 
-  if (!account) {
-    alert('Cuenta no encontrada');
-    return;
-  }
+  const { ok, error } = registerTransaction(
+    date, description, accountId, movement, amount, account.currency
+  );
 
-  const newBalance = movement === 'Entrada'
-    ? account.balance + amount
-    : account.balance - amount;
-
-  updateAccountBalance(accountId, newBalance);
-
-  // FIX #7: Pasar la moneda de la cuenta a la transacción
-  const success = addTransaction(date, description, accountId, account.name, movement, amount, account.currency);
-
-  if (success) {
-    document.getElementById('transactionForm').reset();
+  if (ok) {
+    e.target.reset();
     setDefaultDate();
-    renderUI();
-    alert('✅ Transacción registrada exitosamente');
+    renderAll();
   } else {
-    alert('❌ Error al registrar transacción');
+    alert(`❌ Error al registrar: ${error}`);
   }
 }
 
-function deleteTransactionHandler(transactionId) {
-  if (confirm('¿Estás seguro de que deseas eliminar esta transacción?')) {
-    const transactions = getTransactions();
-    const transaction = transactions.find(t => t.id === transactionId);
+function onDeleteTransaction(transactionId) {
+  if (!confirm('¿Eliminar esta transacción? El saldo de la cuenta se ajustará automáticamente.')) return;
 
-    if (transaction) {
-      const accounts = getAccounts();
-      const account = accounts.find(a => a.id === transaction.accountId);
-
-      if (account) {
-        const newBalance = transaction.movement === 'Entrada'
-          ? account.balance - transaction.amount
-          : account.balance + transaction.amount;
-        updateAccountBalance(transaction.accountId, newBalance);
-      }
-    }
-
-    deleteTransaction(transactionId);
-    renderUI();
+  const { ok, error } = removeTransaction(transactionId);
+  if (ok) {
+    renderAll();
+  } else {
+    alert(`❌ Error al eliminar: ${error}`);
   }
 }
 
-// ========================================
-// RENDERIZADO DE UI
-// ========================================
-
-function renderUI() {
-  renderAccounts();
-  renderTransactions();
-  updateFinancialStatements();
+function showFormError(msg) {
+  alert(`⚠️ ${msg}`);
 }
 
-function renderAccounts() {
-  const accounts = getAccounts();
+// ============================================================
+// RENDERIZADO PRINCIPAL  — consulta DB UNA sola vez
+// ============================================================
+
+function renderAll() {
+  const accounts     = getAccounts();      // ← UNA consulta
+  const transactions = getTransactions();  // ← UNA consulta
+
+  renderAccountsTable(accounts);
+  renderAccountSelect(accounts);
+  renderTransactionsTable(transactions);
+  renderTAccounts(accounts, transactions);
+  renderFinancials(accounts, transactions);
+}
+
+// ---- Tabla de cuentas --------------------------------------
+
+function renderAccountsTable(accounts) {
   const tbody = document.querySelector('#accountsTable tbody');
 
   if (accounts.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay cuentas registradas</td></tr>';
-    updateTransactionSelect();
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No hay cuentas registradas</td></tr>`;
     return;
   }
 
-  // FIX #5: Se agrega columna y botón de eliminar cuenta
-  tbody.innerHTML = accounts.map(account => `
+  tbody.innerHTML = accounts.map(a => `
     <tr>
-      <td><strong>${escapeHtml(account.name)}</strong></td>
-      <td>${escapeHtml(account.type)}</td>
-      <td>${escapeHtml(account.costType || '-')}</td>
-      <td>${formatCurrency(account.balance, account.currency)}</td>
+      <td><strong>${esc(a.name)}</strong></td>
+      <td>${esc(a.type)}</td>
+      <td>${esc(a.costType || '—')}</td>
+      <td class="amount">${fmtCurrency(a.balance, a.currency)}</td>
       <td>
-        <button class="btn-delete" onclick="deleteAccountHandler(${account.id})" title="Eliminar cuenta">🗑️</button>
+        <button class="btn-delete"
+                onclick="onDeleteAccount(${a.id})"
+                title="Eliminar cuenta ${esc(a.name)}">🗑️</button>
       </td>
-    </tr>
-  `).join('');
-
-  updateTransactionSelect();
+    </tr>`
+  ).join('');
 }
 
-function updateTransactionSelect() {
-  const accounts = getAccounts();
-  const select = document.getElementById('transactionAccountSelect');
-  const currentValue = select.value;
+// ---- Select de cuentas en formulario de transacción --------
 
-  select.innerHTML = '<option value="">Seleccione cuenta</option>' +
-    accounts.map(account =>
-      `<option value="${account.id}">${escapeHtml(account.name)} (${account.currency})</option>`
+function renderAccountSelect(accounts) {
+  const sel = document.getElementById('transactionAccountSelect');
+  const prev = sel.value;
+
+  sel.innerHTML =
+    `<option value="">— Selecciona una cuenta —</option>` +
+    accounts.map(a =>
+      `<option value="${a.id}">${esc(a.name)} (${esc(a.currency)})</option>`
     ).join('');
 
-  select.value = currentValue;
+  // Intentar restaurar la selección anterior
+  if (prev) sel.value = prev;
 }
 
-function renderTransactions() {
-  const transactions = getTransactions();
+// ---- Tabla de transacciones --------------------------------
+
+function renderTransactionsTable(transactions) {
   const tbody = document.querySelector('#transactionsTable tbody');
 
   if (transactions.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay transacciones registradas</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No hay transacciones registradas</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = transactions.map(transaction => `
+  tbody.innerHTML = transactions.map(t => `
     <tr>
-      <td>${escapeHtml(transaction.date)}</td>
-      <td>${escapeHtml(transaction.description)}</td>
-      <td>${escapeHtml(transaction.accountName)}</td>
-      <td>${transaction.movement === 'Entrada' ? '📥 Débito' : '📤 Crédito'}</td>
-      <td>${formatCurrency(transaction.amount, transaction.currency || 'MXN')}</td>
-      <td>
-        <button class="btn-delete" onclick="deleteTransactionHandler(${transaction.id})" title="Eliminar transacción">🗑️</button>
+      <td>${esc(t.date)}</td>
+      <td>${esc(t.description)}</td>
+      <td>${esc(t.accountName)}</td>
+      <td class="${t.movement === 'Entrada' ? 'debit' : 'credit'}">
+        ${t.movement === 'Entrada' ? '📥 Débito' : '📤 Crédito'}
       </td>
-    </tr>
-  `).join('');
+      <td class="amount">${fmtCurrency(t.amount, t.currency || 'MXN')}</td>
+      <td>
+        <button class="btn-delete"
+                onclick="onDeleteTransaction(${t.id})"
+                title="Eliminar transacción">🗑️</button>
+      </td>
+    </tr>`
+  ).join('');
 }
 
-// ========================================
-// ESTADOS FINANCIEROS
-// ========================================
+// ---- Cuentas T ----------------------------------------------
 
-function updateFinancialStatements() {
-  const accounts = getAccounts();
-  const transactions = getTransactions();
-
-  const assets = accounts.filter(a => a.type === 'Activo').reduce((sum, a) => sum + (a.balance || 0), 0);
-  const liabilities = accounts.filter(a => a.type === 'Pasivo').reduce((sum, a) => sum + (a.balance || 0), 0);
-  const equity = accounts.filter(a => a.type === 'Patrimonio').reduce((sum, a) => sum + (a.balance || 0), 0);
-  const income = accounts.filter(a => a.type === 'Ingreso').reduce((sum, a) => sum + (a.balance || 0), 0);
-  const expenses = accounts.filter(a => a.type === 'Gasto').reduce((sum, a) => sum + (a.balance || 0), 0);
-
-  const totalDebit = transactions.filter(t => t.movement === 'Entrada').reduce((sum, t) => sum + (t.amount || 0), 0);
-  const totalCredit = transactions.filter(t => t.movement === 'Salida').reduce((sum, t) => sum + (t.amount || 0), 0);
-
-  document.getElementById('assets').textContent = formatCurrency(assets, 'MXN');
-  document.getElementById('liabilities').textContent = formatCurrency(liabilities, 'MXN');
-  document.getElementById('equity').textContent = formatCurrency(equity, 'MXN');
-  document.getElementById('income').textContent = formatCurrency(income, 'MXN');
-  document.getElementById('expenses').textContent = formatCurrency(expenses, 'MXN');
-  document.getElementById('netIncome').textContent = formatCurrency(income - expenses, 'MXN');
-  document.getElementById('totalDebit').textContent = formatCurrency(totalDebit, 'MXN');
-  document.getElementById('totalCredit').textContent = formatCurrency(totalCredit, 'MXN');
-  document.getElementById('totalLiabilitiesEquity').textContent = formatCurrency(liabilities + equity, 'MXN');
-
-  renderTAccounts();
-}
-
-function renderTAccounts() {
-  const accounts = getAccounts();
-  const transactions = getTransactions();
+function renderTAccounts(accounts, transactions) {
   const container = document.getElementById('accountsGrid');
 
   if (accounts.length === 0) {
-    container.innerHTML = '<p class="empty-state">No hay cuentas para mostrar</p>';
+    container.innerHTML = `<p class="empty-state">No hay cuentas para mostrar</p>`;
     return;
   }
 
-  container.innerHTML = accounts.map(account => {
-    const debits = transactions
-      .filter(t => t.accountId === account.id && t.movement === 'Entrada')
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
+  // Agrupar totales por cuenta de una sola pasada
+  const totals = {};
+  for (const t of transactions) {
+    if (!totals[t.accountId]) totals[t.accountId] = { debit: 0, credit: 0 };
+    if (t.movement === 'Entrada') totals[t.accountId].debit  += t.amount;
+    else                          totals[t.accountId].credit += t.amount;
+  }
 
-    const credits = transactions
-      .filter(t => t.accountId === account.id && t.movement === 'Salida')
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
-
+  container.innerHTML = accounts.map(a => {
+    const { debit = 0, credit = 0 } = totals[a.id] || {};
     return `
       <div class="t-account">
-        <div class="t-account-title">${escapeHtml(account.name)}</div>
+        <div class="t-account-title">${esc(a.name)}</div>
         <div class="t-account-body">
           <div class="t-account-left">
             <div class="t-account-header">Débito</div>
-            <div class="t-account-amount">${formatCurrency(debits, account.currency)}</div>
+            <div class="t-account-amount">${fmtCurrency(debit, a.currency)}</div>
           </div>
           <div class="t-account-right">
             <div class="t-account-header">Crédito</div>
-            <div class="t-account-amount">${formatCurrency(credits, account.currency)}</div>
+            <div class="t-account-amount">${fmtCurrency(credit, a.currency)}</div>
           </div>
         </div>
         <div class="t-account-footer">
-          Saldo: ${formatCurrency(account.balance, account.currency)}
+          Saldo: <strong>${fmtCurrency(a.balance, a.currency)}</strong>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
+
+  // Totales globales de débito / crédito
+  const totalDebit  = transactions.filter(t => t.movement === 'Entrada').reduce((s,t) => s + t.amount, 0);
+  const totalCredit = transactions.filter(t => t.movement === 'Salida' ).reduce((s,t) => s + t.amount, 0);
+  document.getElementById('totalDebit').textContent  = fmtCurrency(totalDebit,  'MXN');
+  document.getElementById('totalCredit').textContent = fmtCurrency(totalCredit, 'MXN');
 }
 
-// ========================================
+// ---- Estados financieros ------------------------------------
+
+function renderFinancials(accounts, transactions) {
+  const sum = type => accounts
+    .filter(a => a.type === type)
+    .reduce((s, a) => s + (a.balance || 0), 0);
+
+  const assets      = sum('Activo');
+  const liabilities = sum('Pasivo');
+  const equity      = sum('Patrimonio');
+  const income      = sum('Ingreso');
+  const expenses    = sum('Gasto');
+  const netIncome   = income - expenses;
+
+  setText('assets',               fmtCurrency(assets,               'MXN'));
+  setText('liabilities',          fmtCurrency(liabilities,          'MXN'));
+  setText('equity',               fmtCurrency(equity,               'MXN'));
+  setText('income',               fmtCurrency(income,               'MXN'));
+  setText('expenses',             fmtCurrency(expenses,             'MXN'));
+  setText('netIncome',            fmtCurrency(netIncome,            'MXN'));
+  setText('totalLiabilitiesEquity', fmtCurrency(liabilities + equity, 'MXN'));
+
+  // Colorear utilidad/pérdida
+  const netEl = document.getElementById('netIncome');
+  netEl.style.color = netIncome >= 0
+    ? 'var(--color-success, #16a34a)'
+    : 'var(--color-error,   #dc2626)';
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// ============================================================
 // UTILIDADES
-// ========================================
+// ============================================================
 
-// FIX #3: formatCurrency maneja null, undefined y NaN sin crash
-function formatCurrency(value, currency = 'MXN') {
-  const num = parseFloat(value);
-  const amount = isNaN(num) ? 0 : num;
-
-  const symbols = { 'MXN': '$', 'USD': 'US$', 'EUR': '€' };
-  const symbol = symbols[currency] || currency;
-  return `${symbol} ${amount.toFixed(2)}`;
+/** Formatea un número como moneda. Nunca lanza excepción. */
+function fmtCurrency(value, currency) {
+  const n   = parseFloat(value);
+  const amt = isNaN(n) ? 0 : n;
+  const sym = { MXN: '$', USD: 'US$', EUR: '€' }[currency] ?? currency ?? '$';
+  return `${sym}\u00A0${Math.abs(amt).toFixed(2)}${amt < 0 ? ' (negativo)' : ''}`;
 }
 
-// Escapar HTML para prevenir XSS
-function escapeHtml(text) {
-  if (text == null) return '';
-  return String(text)
+/** Escapa caracteres HTML para evitar XSS al inyectar en innerHTML. */
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/"/g, '&quot;');
 }
