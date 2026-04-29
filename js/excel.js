@@ -1,5 +1,5 @@
 // ============================================================
-// EXPORTACIÓN A EXCEL — CONTABILIDAD CON CUENTAS T
+// EXPORTACIÓN A EXCEL — CONTABILIDAD SIMPLIFICADA
 // Usa SheetJS (xlsx) cargado desde CDN
 // Genera un .xlsx con 5 hojas profesionales
 // ============================================================
@@ -11,7 +11,7 @@
  * Recoge datos de la DB, construye el workbook y lo descarga.
  */
 function exportToExcel() {
-  const accounts     = getAccounts();
+  const accounts = getAccounts();
   const transactions = getTransactions();
 
   if (accounts.length === 0 && transactions.length === 0) {
@@ -22,8 +22,8 @@ function exportToExcel() {
   try {
     const wb = XLSX.utils.book_new();
     wb.Props = {
-      Title:   'Contabilidad con Cuentas T',
-      Author:  'Luis Antonio Canales Guerrero',
+      Title: 'Contabilidad Simplificada',
+      Author: 'Luis Antonio Canales Guerrero',
       Company: 'Luis Antonio Canales Guerrero',
       CreatedDate: new Date()
     };
@@ -35,7 +35,7 @@ function exportToExcel() {
     _sheetCuentasT(wb, accounts, transactions);
     _sheetEstadosFinancieros(wb, accounts, transactions);
 
-    const fecha    = new Date().toISOString().slice(0, 10);
+    const fecha = new Date().toISOString().slice(0, 10);
     const filename = `Contabilidad_${fecha}.xlsx`;
 
     XLSX.writeFile(wb, filename);
@@ -53,52 +53,52 @@ function exportToExcel() {
 // ============================================================
 
 function _sheetResumen(wb, accounts, transactions) {
-  const now  = new Date();
+  const now = new Date();
   const fecha = now.toLocaleDateString('es-MX', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
 
-  const assets      = _sumType(accounts, 'Activo') + _sumType(accounts, 'Activo Diferido');
-  const liabilities = _sumType(accounts, 'Pasivo');
-  const equity      = _sumType(accounts, 'Patrimonio');
-  const income      = _sumType(accounts, 'Ingreso');
-  const expenses    = _sumType(accounts, 'Gasto');
-  const netIncome   = income - expenses;
-  const totalDebit  = transactions.filter(t => t.movement === 'Entrada').reduce((s,t) => s + t.amount, 0);
-  const totalCredit = transactions.filter(t => t.movement === 'Salida' ).reduce((s,t) => s + t.amount, 0);
+  const assets = _sumCategory(accounts, 'Activo') + _sumCategory(accounts, 'Activo Diferido');
+  const liabilities = _sumCategory(accounts, 'Pasivo');
+  const equity = _sumCategory(accounts, 'Patrimonio');
+  const income = _sumCategory(accounts, 'Ingreso');
+  const expenses = _sumCategory(accounts, 'Gasto');
+  const netIncome = income - expenses;
+  const totalEntrada = transactions.filter(t => t.movement === 'Entrada').reduce((s,t) => s + t.amount, 0);
+  const totalSalida = transactions.filter(t => t.movement === 'Salida' ).reduce((s,t) => s + t.amount, 0);
 
   const rows = [
-    ['CONTABILIDAD CON CUENTAS T'],
+    ['CONTABILIDAD SIMPLIFICADA'],
     ['Luis Antonio Canales Guerrero'],
     [`Generado el ${fecha}`],
     [],
     ['── RESUMEN EJECUTIVO ──────────────────────────────'],
     [],
-    ['INDICADOR',                     'VALOR'],
-    ['Total de cuentas',              accounts.length],
-    ['Total de transacciones',        transactions.length],
+    ['INDICADOR', 'VALOR'],
+    ['Total de cuentas', accounts.length],
+    ['Total de transacciones', transactions.length],
     [],
     ['── BALANCE GENERAL ───────────────────────────────'],
     [],
-    ['RUBRO',                         'SALDO (MXN)'],
-    ['Activos',                        assets],
-    ['Pasivos',                        liabilities],
-    ['Patrimonio',                     equity],
-    ['Pasivos + Patrimonio',           liabilities + equity],
+    ['RUBRO', 'SALDO (MXN)'],
+    ['Activos', assets],
+    ['Pasivos', liabilities],
+    ['Patrimonio', equity],
+    ['Pasivos + Patrimonio', liabilities + equity],
     [],
     ['── ESTADO DE RESULTADOS ──────────────────────────'],
     [],
-    ['RUBRO',                         'MONTO (MXN)'],
-    ['Ingresos',                       income],
-    ['Gastos',                         expenses],
-    ['Utilidad / Pérdida neta',        netIncome],
+    ['RUBRO', 'MONTO (MXN)'],
+    ['Ingresos', income],
+    ['Gastos', expenses],
+    ['Utilidad / Pérdida neta', netIncome],
     [],
     ['── MOVIMIENTOS GLOBALES ──────────────────────────'],
     [],
-    ['MOVIMIENTO',                    'TOTAL (MXN)'],
-    ['Total Débitos  (Entradas)',      totalDebit],
-    ['Total Créditos (Salidas)',       totalCredit],
-    ['Balance neto',                  totalDebit - totalCredit],
+    ['MOVIMIENTO', 'TOTAL (MXN)'],
+    ['Total Entradas', totalEntrada],
+    ['Total Salidas', totalSalida],
+    ['Balance neto', totalEntrada - totalSalida],
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -163,11 +163,12 @@ function _sheetResumen(wb, accounts, transactions) {
 // ============================================================
 
 function _sheetCuentas(wb, accounts) {
-  const header = ['#', 'Nombre', 'Tipo', 'Clasificación', 'Moneda', 'Saldo', 'Creada el'];
+  const header = ['#', 'Nombre', 'Categoría', 'Tipo', 'Clasificación', 'Moneda', 'Saldo', 'Creada el'];
 
   const dataRows = accounts.map((a, i) => [
     i + 1,
     a.name,
+    a.category || '—',
     a.type,
     a.costType || '—',
     a.currency || 'MXN',
@@ -175,43 +176,44 @@ function _sheetCuentas(wb, accounts) {
     a.createdAt ? a.createdAt.slice(0,10) : ''
   ]);
 
-  // Fila de totales por tipo
-  const tipos = ['Activo','Pasivo','Patrimonio','Ingreso','Gasto'];
+  // Fila de totales por categoría
+  const categorias = ['Activo','Activo Diferido','Pasivo','Patrimonio','Ingreso','Gasto'];
   const totalesRows = [
     [],
-    ['TOTALES POR TIPO', '', '', '', '', '', ''],
-    ['Tipo', 'Saldo total', '', '', '', '', ''],
-    ...tipos.map(t => [t, _sumType(accounts, t)]),
+    ['TOTALES POR CATEGORÍA', '', '', '', '', '', '', ''],
+    ['Categoría', 'Saldo total', '', '', '', '', '', ''],
+    ...categorias.map(c => [c, _sumCategory(accounts, c)]),
   ];
 
   const ws = XLSX.utils.aoa_to_sheet([header, ...dataRows, ...totalesRows]);
 
   ws['!cols'] = [
-    { wch: 5  },  // #
-    { wch: 30 },  // Nombre
+    { wch: 5 },   // #
+    { wch: 28 },  // Nombre
+    { wch: 16 },  // Categoría
     { wch: 14 },  // Tipo
     { wch: 14 },  // Clasificación
-    { wch: 8  },  // Moneda
+    { wch: 8 },   // Moneda
     { wch: 16 },  // Saldo
     { wch: 14 },  // Fecha
   ];
 
   // Encabezado
-  ['A','B','C','D','E','F','G'].forEach(c => {
+  ['A','B','C','D','E','F','G','H'].forEach(c => {
     const ref = `${c}1`;
     if (ws[ref]) _style(ws, ref, { bold: true, color: 'FFFFFF' }, '1E40AF');
   });
 
   // Filas de datos — alternar color
   dataRows.forEach((_, i) => {
-    const r   = i + 2;
-    const bg  = i % 2 === 0 ? 'EFF6FF' : 'FFFFFF';
-    ['A','B','C','D','E','F','G'].forEach(c => {
+    const r = i + 2;
+    const bg = i % 2 === 0 ? 'EFF6FF' : 'FFFFFF';
+    ['A','B','C','D','E','F','G','H'].forEach(c => {
       const ref = `${c}${r}`;
       if (ws[ref]) _style(ws, ref, {}, bg);
     });
-    // Formato moneda en columna F (Saldo)
-    const saldoRef = `F${r}`;
+    // Formato moneda en columna G (Saldo)
+    const saldoRef = `G${r}`;
     if (ws[saldoRef] && typeof ws[saldoRef].v === 'number') {
       ws[saldoRef].z = '"$"#,##0.00;[Red]"($"#,##0.00")"';
     }
@@ -228,7 +230,7 @@ function _sheetCuentas(wb, accounts) {
     if (ws[ref]) _style(ws, ref, { bold: true, color: '1F3864' }, 'BFDBFE');
   });
 
-  tipos.forEach((_, idx) => {
+  categorias.forEach((_, idx) => {
     const r = totalesStart + 3 + idx;
     const ref = `B${r}`;
     if (ws[ref] && typeof ws[ref].v === 'number') {
@@ -255,7 +257,7 @@ function _sheetTransacciones(wb, transactions) {
     return;
   }
 
-  const header = ['#', 'Fecha', 'Descripción', 'Cuenta', 'Tipo cuenta', 'Movimiento', 'Monto', 'Efecto en saldo', 'Moneda', 'Registrada el'];
+  const header = ['#', 'Fecha', 'Descripción', 'Cuenta', 'Categoría', 'Movimiento', 'Monto', 'Efecto en saldo', 'Moneda', 'Registrada el'];
 
   const dataRows = transactions.map((t, i) => [
     i + 1,
@@ -263,7 +265,7 @@ function _sheetTransacciones(wb, transactions) {
     t.description,
     t.accountName,
     t.accountType || '—',
-    t.movement === 'Entrada' ? 'Débito' : 'Crédito',
+    t.movement === 'Entrada' ? 'Entrada' : 'Salida',
     Number(t.amount),
     Number(t.balanceDelta ?? 0),
     t.currency || 'MXN',
@@ -271,29 +273,29 @@ function _sheetTransacciones(wb, transactions) {
   ]);
 
   // Fila de totales
-  const totalDebit  = transactions.filter(t => t.movement === 'Entrada').reduce((s,t) => s + t.amount, 0);
-  const totalCredit = transactions.filter(t => t.movement === 'Salida' ).reduce((s,t) => s + t.amount, 0);
+  const totalEntrada = transactions.filter(t => t.movement === 'Entrada').reduce((s,t) => s + t.amount, 0);
+  const totalSalida = transactions.filter(t => t.movement === 'Salida' ).reduce((s,t) => s + t.amount, 0);
 
   const dataLen = dataRows.length;
   const totalesRows = [
     [],
-    ['', '', '', '', '', 'TOTAL DÉBITOS',  totalDebit,  '', '', ''],
-    ['', '', '', '', '', 'TOTAL CRÉDITOS', totalCredit, '', '', ''],
-    ['', '', '', '', '', 'BALANCE NETO',   totalDebit - totalCredit, '', '', ''],
+    ['', '', '', '', '', 'TOTAL ENTRADAS', totalEntrada, '', '', ''],
+    ['', '', '', '', '', 'TOTAL SALIDAS', totalSalida, '', '', ''],
+    ['', '', '', '', '', 'BALANCE NETO', totalEntrada - totalSalida, '', '', ''],
   ];
 
   const ws = XLSX.utils.aoa_to_sheet([header, ...dataRows, ...totalesRows]);
 
   ws['!cols'] = [
-    { wch: 5  },  // #
+    { wch: 5 },   // #
     { wch: 12 },  // Fecha
     { wch: 32 },  // Descripción
     { wch: 22 },  // Cuenta
-    { wch: 16 },  // Tipo cuenta
+    { wch: 16 },  // Categoría
     { wch: 12 },  // Movimiento
     { wch: 16 },  // Monto
     { wch: 16 },  // Efecto en saldo
-    { wch: 9  },  // Moneda
+    { wch: 9 },   // Moneda
     { wch: 14 },  // Registrada
   ];
 
@@ -305,11 +307,11 @@ function _sheetTransacciones(wb, transactions) {
 
   // Filas de datos con color por movimiento
   dataRows.forEach((row, i) => {
-    const r   = i + 2;
-    const isDebit = row[4] === 'Débito';
-    const bg  = i % 2 === 0
-      ? (isDebit ? 'ECFDF5' : 'FFF1F2')
-      : (isDebit ? 'D1FAE5' : 'FFE4E6');
+    const r = i + 2;
+    const isEntrada = row[5] === 'Entrada';
+    const bg = i % 2 === 0
+      ? (isEntrada ? 'ECFDF5' : 'FFF1F2')
+      : (isEntrada ? 'D1FAE5' : 'FFE4E6');
 
     ['A','B','C','D','E','F','G','H'].forEach(c => {
       const ref = `${c}${r}`;
@@ -317,14 +319,14 @@ function _sheetTransacciones(wb, transactions) {
     });
 
     // Columna Movimiento — texto en color
-    const movRef = `E${r}`;
+    const movRef = `F${r}`;
     if (ws[movRef]) {
-      _style(ws, movRef, { bold: true, color: isDebit ? '166534' : '9F1239' },
-             isDebit ? (i%2===0 ? 'ECFDF5' : 'D1FAE5') : (i%2===0 ? 'FFF1F2' : 'FFE4E6'));
+      _style(ws, movRef, { bold: true, color: isEntrada ? '166534' : '9F1239' },
+             isEntrada ? (i%2===0 ? 'ECFDF5' : 'D1FAE5') : (i%2===0 ? 'FFF1F2' : 'FFE4E6'));
     }
 
     // Formato moneda
-    const montoRef = `F${r}`;
+    const montoRef = `G${r}`;
     if (ws[montoRef] && typeof ws[montoRef].v === 'number') {
       ws[montoRef].z = '"$"#,##0.00;[Red]"($"#,##0.00")"';
     }
@@ -340,11 +342,11 @@ function _sheetTransacciones(wb, transactions) {
     [t2, '9F1239', 'FFE4E6'],
     [t3, '1F3864', 'DBEAFE'],
   ].forEach(([r, color, bg]) => {
-    ['E','F'].forEach(c => {
+    ['F','G'].forEach(c => {
       const ref = `${c}${r}`;
       if (ws[ref]) _style(ws, ref, { bold: true, color }, bg);
     });
-    const fRef = `F${r}`;
+    const fRef = `G${r}`;
     if (ws[fRef] && typeof ws[fRef].v === 'number') {
       ws[fRef].z = '"$"#,##0.00;[Red]"($"#,##0.00")"';
     }
@@ -360,45 +362,45 @@ function _sheetTransacciones(wb, transactions) {
 // ============================================================
 
 function _sheetCuentasT(wb, accounts, transactions) {
-  // Calcular totales de débito y crédito por cuenta en una pasada
+  // Calcular totales de entrada y salida por cuenta en una pasada
   const totals = {};
   for (const t of transactions) {
-    if (!totals[t.accountId]) totals[t.accountId] = { debit: 0, credit: 0 };
-    if (t.movement === 'Entrada') totals[t.accountId].debit  += t.amount;
-    else                          totals[t.accountId].credit += t.amount;
+    if (!totals[t.accountId]) totals[t.accountId] = { entrada: 0, salida: 0 };
+    if (t.movement === 'Entrada') totals[t.accountId].entrada += t.amount;
+    else totals[t.accountId].salida += t.amount;
   }
 
-  const header = ['Cuenta', 'Tipo', 'Moneda', 'Total Débito', 'Total Crédito', 'Saldo Actual', 'Balance'];
+  const header = ['Cuenta', 'Categoría', 'Tipo', 'Moneda', 'Total Entradas', 'Total Salidas', 'Saldo Actual'];
 
   const dataRows = accounts.map(a => {
-    const { debit = 0, credit = 0 } = totals[a.id] || {};
+    const { entrada = 0, salida = 0 } = totals[a.id] || {};
     return [
       a.name,
+      a.category || '—',
       a.type,
       a.currency || 'MXN',
-      debit,
-      credit,
+      entrada,
+      salida,
       Number(a.balance),
-      debit - credit
     ];
   });
 
   // Totales globales
-  const gDebit  = dataRows.reduce((s, r) => s + r[3], 0);
-  const gCredit = dataRows.reduce((s, r) => s + r[4], 0);
+  const gEntrada = dataRows.reduce((s, r) => s + r[4], 0);
+  const gSalida = dataRows.reduce((s, r) => s + r[5], 0);
 
-  const totalesRow = ['TOTALES', '', '', gDebit, gCredit, '', gDebit - gCredit];
+  const totalesRow = ['TOTALES', '', '', '', gEntrada, gSalida, ''];
 
   const ws = XLSX.utils.aoa_to_sheet([header, ...dataRows, [], totalesRow]);
 
   ws['!cols'] = [
     { wch: 28 },  // Cuenta
+    { wch: 16 },  // Categoría
     { wch: 13 },  // Tipo
-    { wch: 8  },  // Moneda
-    { wch: 16 },  // Débito
-    { wch: 16 },  // Crédito
+    { wch: 8 },   // Moneda
+    { wch: 16 },  // Entradas
+    { wch: 16 },  // Salidas
     { wch: 16 },  // Saldo
-    { wch: 16 },  // Balance
   ];
 
   // Encabezado
@@ -408,24 +410,24 @@ function _sheetCuentasT(wb, accounts, transactions) {
   });
 
   // Sub-encabezados semánticos
-  if (ws['D1']) _style(ws, 'D1', { bold: true, color: 'FFFFFF' }, '166534');
-  if (ws['E1']) _style(ws, 'E1', { bold: true, color: 'FFFFFF' }, '9F1239');
+  if (ws['E1']) _style(ws, 'E1', { bold: true, color: 'FFFFFF' }, '166534');
+  if (ws['F1']) _style(ws, 'F1', { bold: true, color: 'FFFFFF' }, '9F1239');
 
   // Datos
   dataRows.forEach((row, i) => {
-    const r  = i + 2;
+    const r = i + 2;
     const bg = i % 2 === 0 ? 'EFF6FF' : 'FFFFFF';
     ['A','B','C','D','E','F','G'].forEach(c => {
       const ref = `${c}${r}`;
       if (ws[ref]) _style(ws, ref, {}, bg);
     });
 
-    // Débito verde, crédito rojo
-    if (ws[`D${r}`]) _style(ws, `D${r}`, { color: '166534' }, bg);
-    if (ws[`E${r}`]) _style(ws, `E${r}`, { color: '991B1B' }, bg);
+    // Entradas verde, salidas rojo
+    if (ws[`E${r}`]) _style(ws, `E${r}`, { color: '166534' }, bg);
+    if (ws[`F${r}`]) _style(ws, `F${r}`, { color: '991B1B' }, bg);
 
-    // Formato moneda columnas D E F G
-    ['D','E','F','G'].forEach(c => {
+    // Formato moneda columnas E F G
+    ['E','F','G'].forEach(c => {
       const ref = `${c}${r}`;
       if (ws[ref] && typeof ws[ref].v === 'number') {
         ws[ref].z = '"$"#,##0.00;[Red]"($"#,##0.00")"';
@@ -439,7 +441,7 @@ function _sheetCuentasT(wb, accounts, transactions) {
     const ref = `${c}${totalRow}`;
     if (ws[ref]) _style(ws, ref, { bold: true, color: 'FFFFFF' }, '1F3864');
   });
-  ['D','E','G'].forEach(c => {
+  ['E','F'].forEach(c => {
     const ref = `${c}${totalRow}`;
     if (ws[ref] && typeof ws[ref].v === 'number') {
       ws[ref].z = '"$"#,##0.00;[Red]"($"#,##0.00")"';
@@ -456,19 +458,19 @@ function _sheetCuentasT(wb, accounts, transactions) {
 // ============================================================
 
 function _sheetEstadosFinancieros(wb, accounts, transactions) {
-  const assets      = _sumType(accounts, 'Activo') + _sumType(accounts, 'Activo Diferido');
-  const liabilities = _sumType(accounts, 'Pasivo');
-  const equity      = _sumType(accounts, 'Patrimonio');
-  const income      = _sumType(accounts, 'Ingreso');
-  const expenses    = _sumType(accounts, 'Gasto');
-  const netIncome   = income - expenses;
+  const assets = _sumCategory(accounts, 'Activo') + _sumCategory(accounts, 'Activo Diferido');
+  const liabilities = _sumCategory(accounts, 'Pasivo');
+  const equity = _sumCategory(accounts, 'Patrimonio');
+  const income = _sumCategory(accounts, 'Ingreso');
+  const expenses = _sumCategory(accounts, 'Gasto');
+  const netIncome = income - expenses;
 
   const fecha = new Date().toLocaleDateString('es-MX', {
     year: 'numeric', month: 'long', day: 'numeric'
   });
 
-  // Detalle de cuentas por tipo
-  const byType = (type) => accounts.filter(a => a.type === type);
+  // Detalle de cuentas por categoría
+  const byCategory = (category) => accounts.filter(a => a.category === category);
 
   const rows = [
     // Estado de Resultados
@@ -476,11 +478,11 @@ function _sheetEstadosFinancieros(wb, accounts, transactions) {
     [`Al ${fecha}`],
     [],
     ['INGRESOS', ''],
-    ...byType('Ingreso').map(a => [`  ${a.name}`, Number(a.balance)]),
+    ...byCategory('Ingreso').map(a => [`  ${a.name}`, Number(a.balance)]),
     ['Total Ingresos', income],
     [],
     ['GASTOS', ''],
-    ...byType('Gasto').map(a => [`  ${a.name}`, Number(a.balance)]),
+    ...byCategory('Gasto').map(a => [`  ${a.name}`, Number(a.balance)]),
     ['Total Gastos', expenses],
     [],
     ['UTILIDAD / PÉRDIDA NETA', netIncome],
@@ -491,21 +493,21 @@ function _sheetEstadosFinancieros(wb, accounts, transactions) {
     [`Al ${fecha}`],
     [],
     ['ACTIVOS', ''],
-    ...byType('Activo').map(a => [`  ${a.name}`, Number(a.balance)]),
-    ['Subtotal Activos', _sumType(accounts, 'Activo')],
+    ...byCategory('Activo').map(a => [`  ${a.name}`, Number(a.balance)]),
+    ['Subtotal Activos', _sumCategory(accounts, 'Activo')],
     [],
     ['ACTIVOS DIFERIDOS', ''],
-    ...byType('Activo Diferido').map(a => [`  ${a.name}`, Number(a.balance)]),
-    ['Subtotal Activos Diferidos', _sumType(accounts, 'Activo Diferido')],
+    ...byCategory('Activo Diferido').map(a => [`  ${a.name}`, Number(a.balance)]),
+    ['Subtotal Activos Diferidos', _sumCategory(accounts, 'Activo Diferido')],
     [],
     ['Total Activos', assets],
     [],
     ['PASIVOS', ''],
-    ...byType('Pasivo').map(a => [`  ${a.name}`, Number(a.balance)]),
+    ...byCategory('Pasivo').map(a => [`  ${a.name}`, Number(a.balance)]),
     ['Total Pasivos', liabilities],
     [],
     ['PATRIMONIO', ''],
-    ...byType('Patrimonio').map(a => [`  ${a.name}`, Number(a.balance)]),
+    ...byCategory('Patrimonio').map(a => [`  ${a.name}`, Number(a.balance)]),
     ['Total Patrimonio', equity],
     [],
     ['TOTAL PASIVOS + PATRIMONIO', liabilities + equity],
@@ -566,10 +568,10 @@ function _sheetEstadosFinancieros(wb, accounts, transactions) {
     let bg, color;
     if (isNet || isMain) {
       color = val >= 0 ? '166534' : '991B1B';
-      bg    = val >= 0 ? 'DCFCE7' : 'FEE2E2';
+      bg = val >= 0 ? 'DCFCE7' : 'FEE2E2';
     } else {
       color = '1F3864';
-      bg    = 'EFF6FF';
+      bg = 'EFF6FF';
     }
     _style(ws, `A${r}`, { bold: true, color }, bg);
     _style(ws, `B${r}`, { bold: true, color }, bg);
@@ -593,43 +595,43 @@ function _sheetEstadosFinancieros(wb, accounts, transactions) {
 // UTILIDADES INTERNAS
 // ============================================================
 
-/** Suma saldos de todas las cuentas de un tipo */
-function _sumType(accounts, type) {
+/** Suma saldos de todas las cuentas de una categoría */
+function _sumCategory(accounts, category) {
   return accounts
-    .filter(a => a.type === type)
+    .filter(a => a.category === category)
     .reduce((s, a) => s + (Number(a.balance) || 0), 0);
 }
 
 /**
  * Aplica font + fill a una celda de la hoja.
- * @param {object}  ws      - worksheet de SheetJS
- * @param {string}  ref     - referencia de celda, ej. 'A1'
- * @param {object}  font    - propiedades de fuente { bold, sz, color, italic }
- * @param {string}  bgColor - color de fondo ARGB sin '#', ej. '2563EB'
+ * @param {object} ws     - worksheet de SheetJS
+ * @param {string} ref    - referencia de celda, ej. 'A1'
+ * @param {object} font   - propiedades de fuente { bold, sz, color, italic }
+ * @param {string} bgColor - color de fondo ARGB sin '#', ej. '2563EB'
  */
 function _style(ws, ref, font = {}, bgColor = null) {
   if (!ws[ref]) return;
 
   ws[ref].s = {
     font: {
-      name:   'Arial',
-      bold:   font.bold   ?? false,
+      name: 'Arial',
+      bold: font.bold ?? false,
       italic: font.italic ?? false,
-      sz:     font.sz     ?? 10,
-      color:  font.color  ? { rgb: font.color } : undefined,
+      sz: font.sz ?? 10,
+      color: font.color ? { rgb: font.color } : undefined,
     },
     fill: bgColor
       ? { patternType: 'solid', fgColor: { rgb: bgColor } }
       : undefined,
     alignment: {
-      vertical:   'center',
-      wrapText:   true,
+      vertical: 'center',
+      wrapText: true,
     },
     border: {
-      top:    { style: 'thin', color: { rgb: 'D1D5DB' } },
+      top: { style: 'thin', color: { rgb: 'D1D5DB' } },
       bottom: { style: 'thin', color: { rgb: 'D1D5DB' } },
-      left:   { style: 'thin', color: { rgb: 'D1D5DB' } },
-      right:  { style: 'thin', color: { rgb: 'D1D5DB' } },
+      left: { style: 'thin', color: { rgb: 'D1D5DB' } },
+      right: { style: 'thin', color: { rgb: 'D1D5DB' } },
     }
   };
 }
