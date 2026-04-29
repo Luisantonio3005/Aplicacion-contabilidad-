@@ -2,16 +2,14 @@
 // APLICACIÓN DE CONTABILIDAD CON SQLite
 // ========================================
 
-// Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', async () => {
-  // Inicializar base de datos
   const dbReady = await initDatabase();
-  
+
   if (!dbReady) {
-    alert('❌ Error al inicializar la base de datos');
+    alert('❌ Error al inicializar la base de datos. Revisa la consola para más detalles.');
     return;
   }
-  
+
   setupTheme();
   setupEventListeners();
   setupDatabaseMenu();
@@ -26,14 +24,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupTheme() {
   const themeToggle = document.getElementById('themeToggle');
   const savedTheme = localStorage.getItem('theme') || 'light';
-  
+
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeButton(savedTheme);
-  
+
   themeToggle.addEventListener('click', () => {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
     updateThemeButton(newTheme);
@@ -56,85 +53,63 @@ function setupDatabaseMenu() {
   const importBtn = document.getElementById('importBtn');
   const clearBtn = document.getElementById('clearBtn');
   const importFile = document.getElementById('importFile');
-  
-  // Toggle menú
-  dbMenu.addEventListener('click', () => {
+
+  dbMenu.addEventListener('click', (e) => {
+    e.stopPropagation();
     dbMenuPanel.style.display = dbMenuPanel.style.display === 'none' ? 'block' : 'none';
   });
-  
+
   // Cerrar menú al hacer clic fuera
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#dbMenu') && !e.target.closest('#dbMenuPanel')) {
       dbMenuPanel.style.display = 'none';
     }
   });
-  
-  // Exportar base de datos
+
   exportBtn.addEventListener('click', () => {
     const success = exportDatabase();
-    const status = document.getElementById('dbStatus');
-    
-    if (success) {
-      status.textContent = '✅ Base de datos descargada exitosamente';
-      status.style.color = 'green';
-    } else {
-      status.textContent = '❌ Error al descargar base de datos';
-      status.style.color = 'red';
-    }
-    
-    setTimeout(() => {
-      status.textContent = '';
-    }, 3000);
+    showDbStatus(success ? '✅ Base de datos descargada exitosamente' : '❌ Error al descargar base de datos', success);
   });
-  
-  // Importar base de datos
-  importBtn.addEventListener('click', () => {
-    importFile.click();
-  });
-  
+
+  importBtn.addEventListener('click', () => importFile.click());
+
   importFile.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     const success = await importDatabase(file);
-    const status = document.getElementById('dbStatus');
-    
+    showDbStatus(
+      success ? '✅ Base de datos cargada exitosamente' : '❌ Error al cargar base de datos',
+      success
+    );
+
     if (success) {
-      status.textContent = '✅ Base de datos cargada exitosamente';
-      status.style.color = 'green';
-      
-      // Recargar UI
       setTimeout(() => {
         renderUI();
         dbMenuPanel.style.display = 'none';
       }, 1000);
-    } else {
-      status.textContent = '❌ Error al cargar base de datos';
-      status.style.color = 'red';
     }
-    
-    setTimeout(() => {
-      status.textContent = '';
-    }, 3000);
-    
+
     importFile.value = '';
   });
-  
-  // Limpiar base de datos
+
   clearBtn.addEventListener('click', () => {
     const success = clearDatabase();
-    
     if (success) {
-      const status = document.getElementById('dbStatus');
-      status.textContent = '✅ Base de datos limpiada';
-      status.style.color = 'green';
-      
+      showDbStatus('✅ Base de datos limpiada', true);
       setTimeout(() => {
         renderUI();
         dbMenuPanel.style.display = 'none';
       }, 1000);
     }
   });
+}
+
+function showDbStatus(message, isSuccess) {
+  const status = document.getElementById('dbStatus');
+  status.textContent = message;
+  status.style.color = isSuccess ? 'green' : 'red';
+  setTimeout(() => { status.textContent = ''; }, 3000);
 }
 
 // ========================================
@@ -157,33 +132,57 @@ function setDefaultDate() {
 
 function handleAddAccount(e) {
   e.preventDefault();
-  
+
   const name = document.getElementById('accountName').value.trim();
   const type = document.getElementById('accountType').value;
   const balance = parseFloat(document.getElementById('accountBalance').value) || 0;
   const costType = document.getElementById('accountCostType').value;
   const currency = document.getElementById('accountCurrency').value;
-  
+
   if (!name || !type) {
-    alert('Por favor completa todos los campos');
+    alert('Por favor completa todos los campos obligatorios');
     return;
   }
-  
-  // Verificar si la cuenta ya existe
+
   const accounts = getAccounts();
   if (accounts.some(a => a.name.toLowerCase() === name.toLowerCase())) {
     alert('❌ Esta cuenta ya existe');
     return;
   }
-  
+
   const success = addAccount(name, type, balance, costType, currency);
-  
+
   if (success) {
     document.getElementById('accountForm').reset();
     renderUI();
     alert('✅ Cuenta agregada exitosamente');
   } else {
-    alert('❌ Error al agregar cuenta');
+    alert('❌ Error al agregar cuenta. Revisa la consola para más detalles.');
+  }
+}
+
+// FIX #5: Función para eliminar cuentas desde la UI
+function deleteAccountHandler(accountId) {
+  const accounts = getAccounts();
+  const account = accounts.find(a => a.id === accountId);
+
+  if (!account) return;
+
+  const transactions = getTransactions();
+  const hasTransactions = transactions.some(t => t.accountId === accountId);
+
+  const warning = hasTransactions
+    ? `⚠️ La cuenta "${account.name}" tiene transacciones asociadas.\n¿Estás seguro? Se eliminarán también todas sus transacciones.`
+    : `¿Estás seguro de que deseas eliminar la cuenta "${account.name}"?`;
+
+  if (confirm(warning)) {
+    // Eliminar transacciones manualmente ya que el CASCADE depende de PRAGMA
+    transactions
+      .filter(t => t.accountId === accountId)
+      .forEach(t => deleteTransaction(t.id));
+
+    deleteAccount(accountId);
+    renderUI();
   }
 }
 
@@ -193,36 +192,36 @@ function handleAddAccount(e) {
 
 function handleAddTransaction(e) {
   e.preventDefault();
-  
+
   const date = document.getElementById('transactionDate').value;
   const description = document.getElementById('transactionDescription').value.trim();
   const accountId = parseInt(document.getElementById('transactionAccountSelect').value);
   const movement = document.getElementById('transactionMovement').value;
-  const amount = parseFloat(document.getElementById('transactionAmount').value) || 0;
-  
-  if (!date || !description || !accountId || !movement || amount <= 0) {
-    alert('Por favor completa todos los campos correctamente');
+  // FIX #8: Validación explícita del monto para evitar 0
+  const amount = parseFloat(document.getElementById('transactionAmount').value);
+
+  if (!date || !description || !accountId || !movement || isNaN(amount) || amount <= 0) {
+    alert('Por favor completa todos los campos correctamente. El monto debe ser mayor a 0.');
     return;
   }
-  
+
   const accounts = getAccounts();
   const account = accounts.find(a => a.id === accountId);
-  
+
   if (!account) {
     alert('Cuenta no encontrada');
     return;
   }
-  
-  // Actualizar saldo de la cuenta
-  const newBalance = movement === 'Entrada' 
-    ? account.balance + amount 
+
+  const newBalance = movement === 'Entrada'
+    ? account.balance + amount
     : account.balance - amount;
-  
+
   updateAccountBalance(accountId, newBalance);
-  
-  // Agregar transacción
-  const success = addTransaction(date, description, accountId, account.name, movement, amount);
-  
+
+  // FIX #7: Pasar la moneda de la cuenta a la transacción
+  const success = addTransaction(date, description, accountId, account.name, movement, amount, account.currency);
+
   if (success) {
     document.getElementById('transactionForm').reset();
     setDefaultDate();
@@ -235,23 +234,21 @@ function handleAddTransaction(e) {
 
 function deleteTransactionHandler(transactionId) {
   if (confirm('¿Estás seguro de que deseas eliminar esta transacción?')) {
-    // Obtener la transacción para revertir el saldo
     const transactions = getTransactions();
     const transaction = transactions.find(t => t.id === transactionId);
-    
+
     if (transaction) {
       const accounts = getAccounts();
       const account = accounts.find(a => a.id === transaction.accountId);
-      
+
       if (account) {
         const newBalance = transaction.movement === 'Entrada'
           ? account.balance - transaction.amount
           : account.balance + transaction.amount;
-        
         updateAccountBalance(transaction.accountId, newBalance);
       }
     }
-    
+
     deleteTransaction(transactionId);
     renderUI();
   }
@@ -270,22 +267,26 @@ function renderUI() {
 function renderAccounts() {
   const accounts = getAccounts();
   const tbody = document.querySelector('#accountsTable tbody');
-  
+
   if (accounts.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No hay cuentas registradas</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay cuentas registradas</td></tr>';
     updateTransactionSelect();
     return;
   }
-  
+
+  // FIX #5: Se agrega columna y botón de eliminar cuenta
   tbody.innerHTML = accounts.map(account => `
     <tr>
-      <td><strong>${account.name}</strong></td>
-      <td>${account.type}</td>
-      <td>${account.costType}</td>
+      <td><strong>${escapeHtml(account.name)}</strong></td>
+      <td>${escapeHtml(account.type)}</td>
+      <td>${escapeHtml(account.costType || '-')}</td>
       <td>${formatCurrency(account.balance, account.currency)}</td>
+      <td>
+        <button class="btn-delete" onclick="deleteAccountHandler(${account.id})" title="Eliminar cuenta">🗑️</button>
+      </td>
     </tr>
   `).join('');
-  
+
   updateTransactionSelect();
 }
 
@@ -293,31 +294,33 @@ function updateTransactionSelect() {
   const accounts = getAccounts();
   const select = document.getElementById('transactionAccountSelect');
   const currentValue = select.value;
-  
-  select.innerHTML = '<option value="">Seleccione cuenta</option>' + 
-    accounts.map(account => `<option value="${account.id}">${account.name}</option>`).join('');
-  
+
+  select.innerHTML = '<option value="">Seleccione cuenta</option>' +
+    accounts.map(account =>
+      `<option value="${account.id}">${escapeHtml(account.name)} (${account.currency})</option>`
+    ).join('');
+
   select.value = currentValue;
 }
 
 function renderTransactions() {
   const transactions = getTransactions();
   const tbody = document.querySelector('#transactionsTable tbody');
-  
+
   if (transactions.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay transacciones registradas</td></tr>';
     return;
   }
-  
+
   tbody.innerHTML = transactions.map(transaction => `
     <tr>
-      <td>${transaction.date}</td>
-      <td>${transaction.description}</td>
-      <td>${transaction.accountName}</td>
+      <td>${escapeHtml(transaction.date)}</td>
+      <td>${escapeHtml(transaction.description)}</td>
+      <td>${escapeHtml(transaction.accountName)}</td>
       <td>${transaction.movement === 'Entrada' ? '📥 Débito' : '📤 Crédito'}</td>
-      <td>${formatCurrency(transaction.amount, 'MXN')}</td>
+      <td>${formatCurrency(transaction.amount, transaction.currency || 'MXN')}</td>
       <td>
-        <button class="btn-delete" onclick="deleteTransactionHandler(${transaction.id})">🗑️</button>
+        <button class="btn-delete" onclick="deleteTransactionHandler(${transaction.id})" title="Eliminar transacción">🗑️</button>
       </td>
     </tr>
   `).join('');
@@ -330,38 +333,16 @@ function renderTransactions() {
 function updateFinancialStatements() {
   const accounts = getAccounts();
   const transactions = getTransactions();
-  
-  // Calcular totales por tipo de cuenta
-  const assets = accounts
-    .filter(a => a.type === 'Activo')
-    .reduce((sum, a) => sum + a.balance, 0);
-  
-  const liabilities = accounts
-    .filter(a => a.type === 'Pasivo')
-    .reduce((sum, a) => sum + a.balance, 0);
-  
-  const equity = accounts
-    .filter(a => a.type === 'Patrimonio')
-    .reduce((sum, a) => sum + a.balance, 0);
-  
-  const income = accounts
-    .filter(a => a.type === 'Ingreso')
-    .reduce((sum, a) => sum + a.balance, 0);
-  
-  const expenses = accounts
-    .filter(a => a.type === 'Gasto')
-    .reduce((sum, a) => sum + a.balance, 0);
-  
-  // Calcular totales de débito y crédito
-  const totalDebit = transactions
-    .filter(t => t.movement === 'Entrada')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const totalCredit = transactions
-    .filter(t => t.movement === 'Salida')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  // Actualizar DOM
+
+  const assets = accounts.filter(a => a.type === 'Activo').reduce((sum, a) => sum + (a.balance || 0), 0);
+  const liabilities = accounts.filter(a => a.type === 'Pasivo').reduce((sum, a) => sum + (a.balance || 0), 0);
+  const equity = accounts.filter(a => a.type === 'Patrimonio').reduce((sum, a) => sum + (a.balance || 0), 0);
+  const income = accounts.filter(a => a.type === 'Ingreso').reduce((sum, a) => sum + (a.balance || 0), 0);
+  const expenses = accounts.filter(a => a.type === 'Gasto').reduce((sum, a) => sum + (a.balance || 0), 0);
+
+  const totalDebit = transactions.filter(t => t.movement === 'Entrada').reduce((sum, t) => sum + (t.amount || 0), 0);
+  const totalCredit = transactions.filter(t => t.movement === 'Salida').reduce((sum, t) => sum + (t.amount || 0), 0);
+
   document.getElementById('assets').textContent = formatCurrency(assets, 'MXN');
   document.getElementById('liabilities').textContent = formatCurrency(liabilities, 'MXN');
   document.getElementById('equity').textContent = formatCurrency(equity, 'MXN');
@@ -370,11 +351,8 @@ function updateFinancialStatements() {
   document.getElementById('netIncome').textContent = formatCurrency(income - expenses, 'MXN');
   document.getElementById('totalDebit').textContent = formatCurrency(totalDebit, 'MXN');
   document.getElementById('totalCredit').textContent = formatCurrency(totalCredit, 'MXN');
-  
-  const totalLiabilitiesEquity = liabilities + equity;
-  document.getElementById('totalLiabilitiesEquity').textContent = formatCurrency(totalLiabilitiesEquity, 'MXN');
-  
-  // Renderizar cuentas T
+  document.getElementById('totalLiabilitiesEquity').textContent = formatCurrency(liabilities + equity, 'MXN');
+
   renderTAccounts();
 }
 
@@ -382,24 +360,24 @@ function renderTAccounts() {
   const accounts = getAccounts();
   const transactions = getTransactions();
   const container = document.getElementById('accountsGrid');
-  
+
   if (accounts.length === 0) {
     container.innerHTML = '<p class="empty-state">No hay cuentas para mostrar</p>';
     return;
   }
-  
+
   container.innerHTML = accounts.map(account => {
     const debits = transactions
       .filter(t => t.accountId === account.id && t.movement === 'Entrada')
-      .reduce((sum, t) => sum + t.amount, 0);
-    
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+
     const credits = transactions
       .filter(t => t.accountId === account.id && t.movement === 'Salida')
-      .reduce((sum, t) => sum + t.amount, 0);
-    
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+
     return `
       <div class="t-account">
-        <div class="t-account-title">${account.name}</div>
+        <div class="t-account-title">${escapeHtml(account.name)}</div>
         <div class="t-account-body">
           <div class="t-account-left">
             <div class="t-account-header">Débito</div>
@@ -422,13 +400,23 @@ function renderTAccounts() {
 // UTILIDADES
 // ========================================
 
+// FIX #3: formatCurrency maneja null, undefined y NaN sin crash
 function formatCurrency(value, currency = 'MXN') {
-  const symbols = {
-    'MXN': '$',
-    'USD': '$',
-    'EUR': '€'
-  };
-  
+  const num = parseFloat(value);
+  const amount = isNaN(num) ? 0 : num;
+
+  const symbols = { 'MXN': '$', 'USD': 'US$', 'EUR': '€' };
   const symbol = symbols[currency] || currency;
-  return `${symbol} ${value.toFixed(2)}`;
+  return `${symbol} ${amount.toFixed(2)}`;
+}
+
+// Escapar HTML para prevenir XSS
+function escapeHtml(text) {
+  if (text == null) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

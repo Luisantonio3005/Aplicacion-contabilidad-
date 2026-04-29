@@ -159,11 +159,12 @@
               <th>Tipo</th>
               <th>Clasificación</th>
               <th>Saldo</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td colspan="4" class="empty-state">No hay cuentas registradas</td>
+              <td colspan="5" class="empty-state">No hay cuentas registradas</td>
             </tr>
           </tbody>
         </table>
@@ -199,7 +200,7 @@
           </div>
           <div class="form-group">
             <label for="transactionAmount">Monto</label>
-            <input type="number" id="transactionAmount" name="transaction-amount" min="0.01" step="0.01" required value="0.00" />
+            <input type="number" id="transactionAmount" name="transaction-amount" min="0.01" step="0.01" required placeholder="0.00" />
           </div>
           <div class="form-group" style="justify-content: flex-end;">
             <button type="submit" class="btn-primary">Registrar transacción</button>
