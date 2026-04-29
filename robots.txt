@@ -1,0 +1,30 @@
+# Robots.txt para Aplicación de Contabilidad con Cuentas T
+# Autor: Luis Antonio Canales Guerrero
+
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /css/
+Allow: /js/
+Allow: /README.md
+Allow: /ESTRUCTURA.md
+Disallow: /node_modules/
+Disallow: /.git/
+Disallow: /.gitignore
+Disallow: /*.json
+
+# Sitemap
+Sitemap: https://luisantonio3005.github.io/Aplicacion-contabilidad-/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+# Specific rules for Bing
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
