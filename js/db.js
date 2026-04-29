@@ -5,8 +5,52 @@
 
 'use strict';
 
-let db   = null;   // instancia de la base de datos
-let SQL  = null;   // clase sql.js
+let db  = null;
+let SQL = null;
+
+// ============================================================
+// REGLAS DE PARTIDA DOBLE
+//
+// Cuentas con saldo normal DÉBITO:
+//   Débito (Entrada) → AUMENTA el saldo
+//   Crédito (Salida) → DISMINUYE el saldo
+//   Tipos: Activo, Activo Diferido, Gasto
+//
+// Cuentas con saldo normal CRÉDITO:
+//   Crédito (Salida) → AUMENTA el saldo
+//   Débito (Entrada) → DISMINUYE el saldo
+//   Tipos: Pasivo, Patrimonio, Ingreso
+// ============================================================
+
+const TIPOS_SALDO_DEBITO  = ['Activo', 'Activo Diferido', 'Gasto'];
+const TIPOS_SALDO_CREDITO = ['Pasivo', 'Patrimonio', 'Ingreso'];
+
+/**
+ * Calcula el delta real al saldo según el tipo de cuenta y el movimiento.
+ * @param {string} accountType  - tipo de cuenta
+ * @param {string} movement     - 'Entrada' (Débito) | 'Salida' (Crédito)
+ * @param {number} amount       - monto positivo
+ * @returns {number}            - delta a sumar al saldo (puede ser negativo)
+ */
+function _calcDelta(accountType, movement, amount) {
+  const esDebito  = movement === 'Entrada';
+
+  if (TIPOS_SALDO_DEBITO.includes(accountType)) {
+    // Activo, Activo Diferido, Gasto
+    // Débito → +   |   Crédito → −
+    return esDebito ? amount : -amount;
+  }
+
+  if (TIPOS_SALDO_CREDITO.includes(accountType)) {
+    // Pasivo, Patrimonio, Ingreso
+    // Crédito → +   |   Débito → −
+    return esDebito ? -amount : amount;
+  }
+
+  // Tipo desconocido → comportamiento neutro (Entrada suma, Salida resta)
+  console.warn(`Tipo de cuenta desconocido: "${accountType}". Aplicando regla por defecto.`);
+  return esDebito ? amount : -amount;
+}
 
 // ============================================================
 // INICIALIZACIÓN
@@ -14,8 +58,6 @@ let SQL  = null;   // clase sql.js
 
 async function initDatabase() {
   try {
-    // locateFile es OBLIGATORIO para que el navegador encuentre
-    // sql-wasm.wasm en el CDN; sin esto la DB falla silenciosamente
     SQL = await initSqlJs({
       locateFile: filename => `https://sql.js.org/dist/${filename}`
     });
@@ -33,10 +75,8 @@ async function initDatabase() {
     // hay que activarlas en cada conexión para que ON DELETE CASCADE funcione
     db.run('PRAGMA foreign_keys = ON;');
 
-    // Crear / migrar esquema (idempotente)
     _applySchema();
 
-    // Si era una DB nueva, guardar el estado inicial
     if (!savedDb) _persist();
 
     console.log('✅ Base de datos lista');
@@ -48,11 +88,10 @@ async function initDatabase() {
 }
 
 // ============================================================
-// ESQUEMA  (solo CREATE IF NOT EXISTS + migraciones seguras)
+// ESQUEMA (idempotente — CREATE IF NOT EXISTS + migraciones)
 // ============================================================
 
 function _applySchema() {
-  // Tabla de cuentas
   db.run(`
     CREATE TABLE IF NOT EXISTS accounts (
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,7 +105,6 @@ function _applySchema() {
     )
   `);
 
-  // Tabla de transacciones
   db.run(`
     CREATE TABLE IF NOT EXISTS transactions (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,18 +112,25 @@ function _applySchema() {
       description TEXT    NOT NULL,
       accountId   INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
       accountName TEXT    NOT NULL,
+      accountType TEXT    NOT NULL DEFAULT 'Activo',
       movement    TEXT    NOT NULL CHECK(movement IN ('Entrada','Salida')),
       amount      REAL    NOT NULL CHECK(amount > 0),
+      balanceDelta REAL   NOT NULL DEFAULT 0,
       currency    TEXT    NOT NULL DEFAULT 'MXN',
       createdAt   TEXT    NOT NULL
     )
   `);
 
-  // Migración: columna currency en transactions si es una DB antigua
-  try { db.run(`ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT 'MXN'`); }
-  catch (_) { /* ya existe */ }
+  // Migraciones seguras para DBs antiguas
+  const migraciones = [
+    `ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT 'MXN'`,
+    `ALTER TABLE transactions ADD COLUMN accountType TEXT NOT NULL DEFAULT 'Activo'`,
+    `ALTER TABLE transactions ADD COLUMN balanceDelta REAL NOT NULL DEFAULT 0`,
+  ];
+  for (const sql of migraciones) {
+    try { db.run(sql); } catch (_) { /* columna ya existe */ }
+  }
 
-  // Tabla de auditoría
   db.run(`
     CREATE TABLE IF NOT EXISTS audit_log (
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -99,7 +144,7 @@ function _applySchema() {
 }
 
 // ============================================================
-// PERSISTENCIA  (se llama UNA vez al final de cada acción)
+// PERSISTENCIA — UN solo save por acción
 // ============================================================
 
 function _persist() {
@@ -108,7 +153,6 @@ function _persist() {
     const bytes = db.export();
     localStorage.setItem('sqliteDb', Array.from(bytes).join(','));
   } catch (err) {
-    // QuotaExceededError u otro problema de almacenamiento
     console.error('❌ localStorage:', err);
     alert(
       '⚠️ No se pudo guardar en el almacenamiento local (cuota excedida).\n' +
@@ -118,7 +162,7 @@ function _persist() {
 }
 
 // ============================================================
-// AUDITORÍA  (interna, nunca persiste por sí sola)
+// AUDITORÍA
 // ============================================================
 
 function _audit(action, tableName, recordId, details) {
@@ -137,10 +181,6 @@ function _audit(action, tableName, recordId, details) {
 // CUENTAS
 // ============================================================
 
-/**
- * Agrega una cuenta y persiste.
- * Retorna { ok, error }
- */
 function addAccount(name, type, balance, costType, currency) {
   const now = new Date().toISOString();
   try {
@@ -150,7 +190,7 @@ function addAccount(name, type, balance, costType, currency) {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [name, type, Number(balance) || 0, costType || null, currency || 'MXN', now, now]
     );
-    _audit('INSERT', 'accounts', null, `Cuenta creada: ${name}`);
+    _audit('INSERT', 'accounts', null, `Cuenta creada: ${name} (${type})`);
     db.run('COMMIT');
     _persist();
     return { ok: true };
@@ -161,17 +201,24 @@ function addAccount(name, type, balance, costType, currency) {
   }
 }
 
-/** Devuelve todas las cuentas ordenadas por nombre. */
 function getAccounts() {
   try {
-    return _rows(db.exec(`SELECT * FROM accounts ORDER BY name COLLATE NOCASE`));
+    return _rows(db.exec(`SELECT * FROM accounts ORDER BY
+      CASE type
+        WHEN 'Activo'          THEN 1
+        WHEN 'Activo Diferido' THEN 2
+        WHEN 'Pasivo'          THEN 3
+        WHEN 'Patrimonio'      THEN 4
+        WHEN 'Ingreso'         THEN 5
+        WHEN 'Gasto'           THEN 6
+        ELSE 7
+      END, name COLLATE NOCASE`));
   } catch (err) {
     console.error('❌ getAccounts:', err);
     return [];
   }
 }
 
-/** Devuelve una cuenta por ID, o null. */
 function getAccountById(id) {
   try {
     const rows = _rows(db.exec(`SELECT * FROM accounts WHERE id = ?`, [id]));
@@ -182,10 +229,6 @@ function getAccountById(id) {
   }
 }
 
-/**
- * Elimina la cuenta y en cascada sus transacciones.
- * Retorna { ok, error }
- */
 function deleteAccount(accountId) {
   try {
     db.run('BEGIN');
@@ -202,46 +245,51 @@ function deleteAccount(accountId) {
 }
 
 // ============================================================
-// TRANSACCIONES
+// TRANSACCIONES — lógica de partida doble correcta
 // ============================================================
 
 /**
- * Registra una transacción Y actualiza el saldo de la cuenta
- * en una sola transacción SQLite atómica.
- * Si cualquier paso falla, se hace ROLLBACK completo.
- * Retorna { ok, error }
+ * Registra una transacción aplicando las reglas de partida doble:
+ *   - Cuentas de saldo DÉBITO  (Activo, Activo Diferido, Gasto):
+ *       Entrada (Débito) → saldo SUBE
+ *       Salida (Crédito) → saldo BAJA
+ *   - Cuentas de saldo CRÉDITO (Pasivo, Patrimonio, Ingreso):
+ *       Salida  (Crédito) → saldo SUBE
+ *       Entrada (Débito)  → saldo BAJA
+ *
+ * Todo ocurre en una sola transacción SQLite atómica.
+ * Retorna { ok, newBalance, delta, error }
  */
 function registerTransaction(date, description, accountId, movement, amount, currency) {
   const account = getAccountById(accountId);
   if (!account) return { ok: false, error: 'Cuenta no encontrada' };
 
-  const delta      = movement === 'Entrada' ? amount : -amount;
+  const delta      = _calcDelta(account.type, movement, amount);
   const newBalance = account.balance + delta;
   const now        = new Date().toISOString();
 
   try {
     db.run('BEGIN');
 
-    // 1. Actualizar saldo
     db.run(
       `UPDATE accounts SET balance = ?, updatedAt = ? WHERE id = ?`,
       [newBalance, now, accountId]
     );
 
-    // 2. Insertar transacción
     db.run(
       `INSERT INTO transactions
-         (date, description, accountId, accountName, movement, amount, currency, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [date, description, accountId, account.name, movement, amount, currency || account.currency, now]
+         (date, description, accountId, accountName, accountType, movement, amount, balanceDelta, currency, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [date, description, accountId, account.name, account.type,
+       movement, amount, delta, currency || account.currency, now]
     );
 
     _audit('INSERT', 'transactions', null,
-      `${movement} ${amount} ${currency} — ${description}`);
+      `${movement} $${amount} en "${account.name}" (${account.type}) → saldo: ${account.balance} → ${newBalance}`);
 
     db.run('COMMIT');
-    _persist();                 // ← UN SOLO SAVE por acción completa
-    return { ok: true };
+    _persist();
+    return { ok: true, newBalance, delta };
   } catch (err) {
     try { db.run('ROLLBACK'); } catch (_) {}
     console.error('❌ registerTransaction:', err);
@@ -250,29 +298,27 @@ function registerTransaction(date, description, accountId, movement, amount, cur
 }
 
 /**
- * Elimina una transacción Y revierte el saldo de la cuenta
- * en una sola transacción SQLite atómica.
- * Retorna { ok, error }
+ * Elimina una transacción y REVIERTE el delta original al saldo.
+ * Usa el balanceDelta guardado, así el cálculo es siempre exacto.
  */
 function removeTransaction(transactionId) {
-  // Obtener la transacción antes de borrarla
-  let txRows;
+  let tx;
   try {
-    txRows = _rows(db.exec(`SELECT * FROM transactions WHERE id = ?`, [transactionId]));
+    const rows = _rows(db.exec(`SELECT * FROM transactions WHERE id = ?`, [transactionId]));
+    tx = rows[0];
   } catch (err) {
     return { ok: false, error: err.message };
   }
 
-  const tx = txRows[0];
   if (!tx) return { ok: false, error: 'Transacción no encontrada' };
 
   const account = getAccountById(tx.accountId);
-  if (!account) return { ok: false, error: 'Cuenta de la transacción no encontrada' };
+  if (!account) return { ok: false, error: 'La cuenta de esta transacción ya no existe' };
 
-  // Revertir: si fue Entrada la quitamos, si fue Salida la devolvemos
-  const delta      = tx.movement === 'Entrada' ? -tx.amount : tx.amount;
-  const newBalance = account.balance + delta;
-  const now        = new Date().toISOString();
+  // Revertir exactamente el delta que se aplicó originalmente
+  const revertDelta = -(tx.balanceDelta ?? _calcDelta(account.type, tx.movement, tx.amount));
+  const newBalance  = account.balance + revertDelta;
+  const now         = new Date().toISOString();
 
   try {
     db.run('BEGIN');
@@ -285,10 +331,10 @@ function removeTransaction(transactionId) {
     db.run(`DELETE FROM transactions WHERE id = ?`, [transactionId]);
 
     _audit('DELETE', 'transactions', transactionId,
-      `Transacción eliminada, saldo revertido en cuenta ${account.name}`);
+      `TX eliminada de "${account.name}" → saldo revertido: ${account.balance} → ${newBalance}`);
 
     db.run('COMMIT');
-    _persist();                 // ← UN SOLO SAVE
+    _persist();
     return { ok: true };
   } catch (err) {
     try { db.run('ROLLBACK'); } catch (_) {}
@@ -297,7 +343,6 @@ function removeTransaction(transactionId) {
   }
 }
 
-/** Devuelve todas las transacciones más recientes primero. */
 function getTransactions() {
   try {
     return _rows(db.exec(`SELECT * FROM transactions ORDER BY date DESC, id DESC`));
@@ -308,7 +353,7 @@ function getTransactions() {
 }
 
 // ============================================================
-// GESTIÓN DE LA BASE DE DATOS (export / import / clear)
+// GESTIÓN DE LA BASE DE DATOS
 // ============================================================
 
 function exportDatabase() {
@@ -338,13 +383,8 @@ function importDatabase(file) {
         const bytes = new Uint8Array(e.target.result);
         db = new SQL.Database(bytes);
         db.run('PRAGMA foreign_keys = ON;');
-
-        // Migración: asegura que el esquema esté actualizado
-        _applySchema();
-
-        // Guardar DESPUÉS de migrar (importante: no antes)
+        _applySchema();   // migración antes de guardar
         _persist();
-
         console.log('✅ Base de datos importada');
         resolve(true);
       } catch (err) {
@@ -357,18 +397,15 @@ function importDatabase(file) {
 }
 
 function clearDatabase() {
-  if (!confirm(
-    '⚠️ ¿Eliminar TODA la base de datos?\n' +
-    'Esta acción no se puede deshacer.'
-  )) return false;
+  if (!confirm('⚠️ ¿Eliminar TODA la base de datos?\nEsta acción no se puede deshacer.'))
+    return false;
 
   try {
     db.run('BEGIN');
     db.run('DELETE FROM transactions');
     db.run('DELETE FROM accounts');
     db.run('DELETE FROM audit_log');
-    // Resetear contadores AUTOINCREMENT para que los IDs vuelvan a 1
-    try { db.run(`DELETE FROM sqlite_sequence`); } catch (_) {}
+    try { db.run('DELETE FROM sqlite_sequence'); } catch (_) {}
     db.run('COMMIT');
     _persist();
     return true;
@@ -378,10 +415,6 @@ function clearDatabase() {
     return false;
   }
 }
-
-// ============================================================
-// ESTADÍSTICAS
-// ============================================================
 
 function getDatabaseStats() {
   try {
@@ -393,7 +426,6 @@ function getDatabaseStats() {
     `))[0];
     return r ?? { accounts: 0, transactions: 0, totalAmount: 0 };
   } catch (err) {
-    console.error('❌ getDatabaseStats:', err);
     return { accounts: 0, transactions: 0, totalAmount: 0 };
   }
 }
@@ -402,10 +434,6 @@ function getDatabaseStats() {
 // UTILIDADES INTERNAS
 // ============================================================
 
-/**
- * Convierte el resultado de db.exec() en un array de objetos planos.
- * Si el resultado está vacío devuelve [].
- */
 function _rows(result) {
   if (!result || result.length === 0) return [];
   const { columns, values } = result[0];

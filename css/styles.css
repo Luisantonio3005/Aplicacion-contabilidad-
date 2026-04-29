@@ -857,9 +857,143 @@ html[data-theme="dark"] .auth-logged-in p {
   color: white;
 }
 
-.db-menu-content .btn-danger:hover {
-  background-color: var(--button-danger-hover);
+.db-menu-content .btn-excel {
+  background-color: #166534;
+  color: white;
 }
+
+.db-menu-content .btn-excel:hover {
+  background-color: #14532d;
+}
+
+.db-divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 0.25rem 0;
+}
+
+/* ========================================
+   BADGES DE TIPO DE CUENTA
+   ======================================== */
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-activo          { background: #dbeafe; color: #1e40af; }
+.badge-activo-diferido { background: #e0e7ff; color: #3730a3; }
+.badge-pasivo          { background: #fee2e2; color: #991b1b; }
+.badge-patrimonio      { background: #fef9c3; color: #854d0e; }
+.badge-ingreso         { background: #dcfce7; color: #166534; }
+.badge-gasto           { background: #fce7f3; color: #9d174d; }
+
+html[data-theme="dark"] .badge-activo          { background: #1e3a5f; color: #93c5fd; }
+html[data-theme="dark"] .badge-activo-diferido { background: #1e2060; color: #a5b4fc; }
+html[data-theme="dark"] .badge-pasivo          { background: #450a0a; color: #fca5a5; }
+html[data-theme="dark"] .badge-patrimonio      { background: #422006; color: #fde68a; }
+html[data-theme="dark"] .badge-ingreso         { background: #052e16; color: #86efac; }
+html[data-theme="dark"] .badge-gasto           { background: #500724; color: #f9a8d4; }
+
+/* ========================================
+   SALDO NORMAL LABEL
+   ======================================== */
+
+.saldo-normal {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* ========================================
+   EFECTO EN SALDO (columna de transacciones)
+   ======================================== */
+
+.delta-positive {
+  color: #166534;
+  font-weight: 600;
+}
+
+.delta-negative {
+  color: #991b1b;
+  font-weight: 600;
+}
+
+.amount-negative {
+  color: #dc2626 !important;
+  font-weight: 700;
+}
+
+.account-type-label {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+/* ========================================
+   CUENTAS T — COLORES POR TIPO
+   ======================================== */
+
+.t-account-activo          { border-top: 3px solid #2563eb; }
+.t-account-activo-diferido { border-top: 3px solid #6366f1; }
+.t-account-pasivo          { border-top: 3px solid #ef4444; }
+.t-account-patrimonio      { border-top: 3px solid #eab308; }
+.t-account-ingreso         { border-top: 3px solid #22c55e; }
+.t-account-gasto           { border-top: 3px solid #ec4899; }
+
+.t-account-type {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  margin-top: 0.15rem;
+}
+
+.side-normal {
+  background-color: rgba(34, 197, 94, 0.08);
+}
+
+.side-label {
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.t-account-divider {
+  width: 2px;
+  background-color: var(--border-color);
+  flex-shrink: 0;
+}
+
+/* ========================================
+   ECUACIÓN CONTABLE
+   ======================================== */
+
+.balance-ok {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #166534;
+  background: #dcfce7;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.balance-warn {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.75rem;
+}
+
+html[data-theme="dark"] .balance-ok  { background: #052e16; color: #86efac; }
+html[data-theme="dark"] .balance-warn{ background: #422006; color: #fde68a; }
 
 .db-status {
   padding: 0.75rem;

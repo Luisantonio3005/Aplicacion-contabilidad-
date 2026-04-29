@@ -80,9 +80,12 @@
   <div class="db-menu" id="dbMenuPanel" style="display:none;" role="dialog" aria-label="Gestión de base de datos">
     <div class="db-menu-content">
       <h3>Gestión de Base de Datos</h3>
-      <button id="exportBtn" class="btn-primary">📥 Descargar copia</button>
-      <button id="importBtn" class="btn-primary">📤 Cargar copia</button>
-      <button id="clearBtn"  class="btn-danger" >🗑️ Limpiar todo</button>
+      <button id="exportBtn"   class="btn-primary">📥 Descargar copia .db</button>
+      <button id="importBtn"   class="btn-primary">📤 Cargar copia .db</button>
+      <hr class="db-divider" />
+      <button id="excelBtn"    class="btn-excel"  >📊 Exportar a Excel</button>
+      <hr class="db-divider" />
+      <button id="clearBtn"    class="btn-danger" >🗑️ Limpiar todo</button>
       <input  type="file" id="importFile" accept=".db,.sqlite" style="display:none" />
       <p id="dbStatus" class="db-status" aria-live="polite"></p>
     </div>
@@ -105,11 +108,16 @@
           <label for="accountType">Tipo de cuenta</label>
           <select id="accountType" name="account-type" required>
             <option value="">— Selecciona un tipo —</option>
-            <option value="Activo">Activo</option>
-            <option value="Pasivo">Pasivo</option>
-            <option value="Patrimonio">Patrimonio</option>
-            <option value="Ingreso">Ingreso</option>
-            <option value="Gasto">Gasto</option>
+            <optgroup label="Saldo normal: Débito">
+              <option value="Activo">Activo</option>
+              <option value="Activo Diferido">Activo Diferido</option>
+              <option value="Gasto">Gasto</option>
+            </optgroup>
+            <optgroup label="Saldo normal: Crédito">
+              <option value="Pasivo">Pasivo</option>
+              <option value="Patrimonio">Patrimonio</option>
+              <option value="Ingreso">Ingreso</option>
+            </optgroup>
           </select>
         </div>
 
@@ -154,13 +162,14 @@
           <tr>
             <th>Cuenta</th>
             <th>Tipo</th>
+            <th>Saldo normal</th>
             <th>Clasificación</th>
             <th>Saldo</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td colspan="5" class="empty-state">No hay cuentas registradas</td></tr>
+          <tr><td colspan="6" class="empty-state">No hay cuentas registradas</td></tr>
         </tbody>
       </table>
     </div>
@@ -223,14 +232,15 @@
           <tr>
             <th>Fecha</th>
             <th>Descripción</th>
-            <th>Cuenta</th>
+            <th>Cuenta / Tipo</th>
             <th>Movimiento</th>
             <th>Monto</th>
+            <th>Efecto en saldo</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td colspan="6" class="empty-state">No hay transacciones registradas</td></tr>
+          <tr><td colspan="7" class="empty-state">No hay transacciones registradas</td></tr>
         </tbody>
       </table>
     </div>
@@ -268,6 +278,7 @@
         <span>Pasivos + Patrimonio:</span>
         <span id="totalLiabilitiesEquity">$ 0.00</span>
       </div>
+      <p id="balanceCheck" class="balance-ok">✅ La ecuación contable cuadra</p>
     </div>
 
   </div>
@@ -294,8 +305,12 @@
 <!-- sql.js — SQLite en WebAssembly -->
 <script src="https://sql.js.org/dist/sql-wasm.js"></script>
 
+<!-- SheetJS — Exportación a Excel (.xlsx) -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
 <!-- Módulos de la aplicación -->
 <script src="js/db.js"></script>
+<script src="js/excel.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
