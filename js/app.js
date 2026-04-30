@@ -392,14 +392,12 @@ function renderSummaryGrid(accounts) {
 // ---- Estados financieros -----------------------------------
 
 function renderFinancials(accounts, transactions) {
-  // El saldo de cada cuenta ya refleja: initialBalance + todas las entradas - todas las salidas
-  // Así que sumamos directamente el balance por categoría para TODOS los tipos de cuenta
-
   const sumBal = (...cats) => accounts
     .filter(a => cats.includes(a.category))
     .reduce((s, a) => s + (a.balance || 0), 0);
 
   // ── BALANCE GENERAL ──────────────────────────────────────
+  // Usa el saldo actual de cada cuenta por categoría
   const currentAssets    = sumBal('Activo Circulante');
   const nonCurrentAssets = sumBal('Activo No Circulante');
   const deferredAssets   = sumBal('Activo Diferido');
@@ -407,44 +405,45 @@ function renderFinancials(accounts, transactions) {
 
   const currentLiab    = sumBal('Pasivo Circulante');
   const nonCurrentLiab = sumBal('Pasivo No Circulante');
-  const deferredLiab   = sumBal('Pasivo Diferido');
-  const totalLiab      = currentLiab + nonCurrentLiab + deferredLiab;
+  const totalLiab      = currentLiab + nonCurrentLiab;
 
   const capitalStock = sumBal('Capital Social');
   const retained     = sumBal('Utilidades');
   const totalEquity  = capitalStock + retained;
 
   // ── ESTADO DE RESULTADOS ─────────────────────────────────
-  // Para cuentas de Ingresos/Gastos: el saldo actual ES el acumulado correcto
-  // (saldo inicial + entradas - salidas durante el período)
-  const operIncome    = sumBal('Ingresos Operacionales');
-  const nonOperIncome = sumBal('Ingresos No Operacionales');
-  const operExp       = sumBal('Gastos Operacionales');
-  const nonOperExp    = sumBal('Gastos No Operacionales');
-  const netIncome     = (operIncome + nonOperIncome) - (operExp + nonOperExp);
+  // Estrategia: si el usuario tiene cuentas de Ingresos/Gastos → suma sus saldos.
+  // Si no → suma TODAS las transacciones: Entradas = ingresos, Salidas = gastos.
+  // Esto hace que el estado de resultados siempre muestre algo útil.
 
-  // Si no hay cuentas de Ingresos/Gastos, calcular desde transacciones como fallback
-  // agrupando por la categoría de la cuenta origen
-  const hasIncomeAccounts = accounts.some(a =>
-    ['Ingresos Operacionales','Ingresos No Operacionales',
-     'Gastos Operacionales','Gastos No Operacionales'].includes(a.category)
-  );
+  const incomeCategories = ['Ingresos Operacionales', 'Ingresos No Operacionales'];
+  const expenseCategories = ['Gastos Operacionales', 'Gastos No Operacionales'];
 
-  let finalOperIncome = operIncome, finalNonOperIncome = nonOperIncome;
-  let finalOperExp = operExp, finalNonOperExp = nonOperExp, finalNetIncome = netIncome;
+  const hasIncomeAccts  = accounts.some(a => incomeCategories.includes(a.category));
+  const hasExpenseAccts = accounts.some(a => expenseCategories.includes(a.category));
 
-  if (!hasIncomeAccounts) {
-    // Fallback: sumar transacciones por categoría de cuenta
-    const txSum = (cats, mov) => transactions
-      .filter(t => cats.includes(t.accountType) && t.movement === mov)
+  let finalOperIncome, finalNonOperIncome, finalOperExp, finalNonOperExp;
+
+  if (hasIncomeAccts || hasExpenseAccts) {
+    // Modo contable estricto: usa saldos de cuentas de ingresos/gastos
+    finalOperIncome    = sumBal('Ingresos Operacionales');
+    finalNonOperIncome = sumBal('Ingresos No Operacionales');
+    finalOperExp       = sumBal('Gastos Operacionales');
+    finalNonOperExp    = sumBal('Gastos No Operacionales');
+  } else {
+    // Modo simplificado: todas las entradas son ingresos, todas las salidas son gastos
+    // Separamos Operacional (mayoría) y No Operacional (0 en este modo)
+    finalOperIncome    = transactions
+      .filter(t => t.movement === 'Entrada')
       .reduce((s, t) => s + (t.amount || 0), 0);
-
-    finalOperIncome    = txSum(['Ingresos Operacionales'],    'Entrada') - txSum(['Ingresos Operacionales'],    'Salida');
-    finalNonOperIncome = txSum(['Ingresos No Operacionales'], 'Entrada') - txSum(['Ingresos No Operacionales'], 'Salida');
-    finalOperExp       = txSum(['Gastos Operacionales'],      'Entrada') - txSum(['Gastos Operacionales'],      'Salida');
-    finalNonOperExp    = txSum(['Gastos No Operacionales'],   'Entrada') - txSum(['Gastos No Operacionales'],   'Salida');
-    finalNetIncome     = (finalOperIncome + finalNonOperIncome) - (finalOperExp + finalNonOperExp);
+    finalNonOperIncome = 0;
+    finalOperExp       = transactions
+      .filter(t => t.movement === 'Salida')
+      .reduce((s, t) => s + (t.amount || 0), 0);
+    finalNonOperExp    = 0;
   }
+
+  const finalNetIncome = (finalOperIncome + finalNonOperIncome) - (finalOperExp + finalNonOperExp);
 
   // ── RENDERIZAR ESTADO DE RESULTADOS ──────────────────────
   setText('operIncome',      fmtCurrency(finalOperIncome,    'MXN'));
@@ -463,10 +462,9 @@ function renderFinancials(accounts, transactions) {
   setText('nonCurrentLiabilities', fmtCurrency(nonCurrentLiab, 'MXN'));
   setText('totalLiabilities',      fmtCurrency(totalLiab,      'MXN'));
 
-  setText('capitalStock',          fmtCurrency(capitalStock, 'MXN'));
-  setText('retainedEarnings',      fmtCurrency(retained,     'MXN'));
-  setText('totalEquity',           fmtCurrency(totalEquity,  'MXN'));
-
+  setText('capitalStock',           fmtCurrency(capitalStock, 'MXN'));
+  setText('retainedEarnings',       fmtCurrency(retained,     'MXN'));
+  setText('totalEquity',            fmtCurrency(totalEquity,  'MXN'));
   setText('totalLiabilitiesEquity', fmtCurrency(totalLiab + totalEquity, 'MXN'));
 
   // Color utilidad/pérdida
