@@ -1041,3 +1041,42 @@ html[data-theme="dark"] .balance-warn{ background: #422006; color: #fde68a; }
     flex-direction: row;
   }
 }
+
+/* ── RESUMEN DE CUENTAS (summaryGrid) ─────────────────────── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.summary-group {
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--card-bg, #fff);
+}
+.summary-group-title {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 0.2rem 0;
+  color: var(--text-secondary, #6b7280);
+}
+.summary-group-activo       { border-left: 4px solid #16a34a; }
+.summary-group-activo-diferido { border-left: 4px solid #0891b2; }
+.summary-group-pasivo       { border-left: 4px solid #dc2626; }
+.summary-group-patrimonio   { border-left: 4px solid #7c3aed; }
+.summary-group-ingreso      { border-left: 4px solid #0284c7; }
+.summary-group-gasto        { border-left: 4px solid #f59e0b; }
+.summary-group-otro         { border-left: 4px solid #9ca3af; }

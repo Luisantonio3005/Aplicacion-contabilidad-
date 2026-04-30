@@ -219,6 +219,7 @@ function renderAll() {
   renderAccountSelect(accounts);
   renderTransactionsTable(transactions);
   renderTAccounts(accounts, transactions);
+  renderSummaryGrid(accounts);
   renderFinancials(accounts, transactions);
 }
 
@@ -352,80 +353,138 @@ function renderTAccounts(accounts, transactions) {
   setText('totalSalida',  fmtCurrency(totalSalida,  'MXN'));
 }
 
+// ---- Resumen de cuentas (summaryGrid) ----------------------
+
+function renderSummaryGrid(accounts) {
+  const container = document.getElementById('summaryGrid');
+  if (!container) return;
+
+  if (accounts.length === 0) {
+    container.innerHTML = `<p class="empty-state">No hay cuentas para mostrar</p>`;
+    return;
+  }
+
+  // Agrupar por categoría
+  const grupos = {};
+  for (const a of accounts) {
+    if (!grupos[a.category]) grupos[a.category] = [];
+    grupos[a.category].push(a);
+  }
+
+  container.innerHTML = Object.entries(grupos).map(([cat, lista]) => {
+    const tipoClase = _tipoClase(cat);
+    const totalGrupo = lista.reduce((s, a) => s + (a.balance || 0), 0);
+    return `
+      <div class="summary-group summary-group-${tipoClase}">
+        <div class="summary-group-title">
+          <span>${esc(cat)}</span>
+          <strong>${dmtCurrency(totalGrupo, 'MXN')}</strong>
+        </div>
+        ${lista.map(a => `
+          <div class="summary-item">
+            <span>${esc(a.name)}</span>
+            <span class="${a.balance < 0 ? 'amount-negative' : ''}">${dmtCurrency(a.balance, a.currency)}</span>
+          </div>`).join('')}
+      </div>`;
+  }).join('');
+}
+
 // ---- Estados financieros -----------------------------------
 
 function renderFinancials(accounts, transactions) {
-  // Categorías reales guardadas en DB
-  const sum = (...categorias) => accounts
-    .filter(a => categorias.includes(a.category))
+  // El saldo de cada cuenta ya refleja: initialBalance + todas las entradas - todas las salidas
+  // Así que sumamos directamente el balance por categoría para TODOS los tipos de cuenta
+
+  const sumBal = (...cats) => accounts
+    .filter(a => cats.includes(a.category))
     .reduce((s, a) => s + (a.balance || 0), 0);
 
-  // Activos
-  const currentAssets    = sum('Activo Circulante');
-  const nonCurrentAssets = sum('Activo No Circulante');
-  const deferredAssets   = sum('Activo Diferido');
+  // ── BALANCE GENERAL ──────────────────────────────────────
+  const currentAssets    = sumBal('Activo Circulante');
+  const nonCurrentAssets = sumBal('Activo No Circulante');
+  const deferredAssets   = sumBal('Activo Diferido');
   const totalAssets      = currentAssets + nonCurrentAssets + deferredAssets;
 
-  // Pasivos
-  const currentLiab    = sum('Pasivo Circulante');
-  const nonCurrentLiab = sum('Pasivo No Circulante');
-  const deferredLiab   = sum('Pasivo Diferido');
+  const currentLiab    = sumBal('Pasivo Circulante');
+  const nonCurrentLiab = sumBal('Pasivo No Circulante');
+  const deferredLiab   = sumBal('Pasivo Diferido');
   const totalLiab      = currentLiab + nonCurrentLiab + deferredLiab;
 
-  // Patrimonio
-  const capitalStock     = sum('Capital Social');
-  const retained         = sum('Utilidades');
-  const totalEquity      = capitalStock + retained;
+  const capitalStock = sumBal('Capital Social');
+  const retained     = sumBal('Utilidades');
+  const totalEquity  = capitalStock + retained;
 
-  // Ingresos
-  const operIncome    = sum('Ingresos Operacionales');
-  const nonOperIncome = sum('Ingresos No Operacionales');
+  // ── ESTADO DE RESULTADOS ─────────────────────────────────
+  // Para cuentas de Ingresos/Gastos: el saldo actual ES el acumulado correcto
+  // (saldo inicial + entradas - salidas durante el período)
+  const operIncome    = sumBal('Ingresos Operacionales');
+  const nonOperIncome = sumBal('Ingresos No Operacionales');
+  const operExp       = sumBal('Gastos Operacionales');
+  const nonOperExp    = sumBal('Gastos No Operacionales');
+  const netIncome     = (operIncome + nonOperIncome) - (operExp + nonOperExp);
 
-  // Gastos
-  const operExp    = sum('Gastos Operacionales');
-  const nonOperExp = sum('Gastos No Operacionales');
+  // Si no hay cuentas de Ingresos/Gastos, calcular desde transacciones como fallback
+  // agrupando por la categoría de la cuenta origen
+  const hasIncomeAccounts = accounts.some(a =>
+    ['Ingresos Operacionales','Ingresos No Operacionales',
+     'Gastos Operacionales','Gastos No Operacionales'].includes(a.category)
+  );
 
-  const netIncome = (operIncome + nonOperIncome) - (operExp + nonOperExp);
+  let finalOperIncome = operIncome, finalNonOperIncome = nonOperIncome;
+  let finalOperExp = operExp, finalNonOperExp = nonOperExp, finalNetIncome = netIncome;
 
-  // Estado de Resultados
-  setText('operIncome',    fmtCurrency(operIncome,    'MXN'));
-  setText('nonOperIncome', fmtCurrency(nonOperIncome, 'MXN'));
-  setText('operExpenses',  fmtCurrency(operExp,       'MXN'));
-  setText('nonOperExpenses', fmtCurrency(nonOperExp,  'MXN'));
-  setText('netIncome',     fmtCurrency(netIncome,     'MXN'));
+  if (!hasIncomeAccounts) {
+    // Fallback: sumar transacciones por categoría de cuenta
+    const txSum = (cats, mov) => transactions
+      .filter(t => cats.includes(t.accountType) && t.movement === mov)
+      .reduce((s, t) => s + (t.amount || 0), 0);
 
-  // Balance General
-  setText('currentAssets',    fmtCurrency(currentAssets,    'MXN'));
-  setText('nonCurrentAssets', fmtCurrency(nonCurrentAssets, 'MXN'));
-  setText('deferredAssets',   fmtCurrency(deferredAssets,   'MXN'));
-  setText('totalAssets',      fmtCurrency(totalAssets,      'MXN'));
+    finalOperIncome    = txSum(['Ingresos Operacionales'],    'Entrada') - txSum(['Ingresos Operacionales'],    'Salida');
+    finalNonOperIncome = txSum(['Ingresos No Operacionales'], 'Entrada') - txSum(['Ingresos No Operacionales'], 'Salida');
+    finalOperExp       = txSum(['Gastos Operacionales'],      'Entrada') - txSum(['Gastos Operacionales'],      'Salida');
+    finalNonOperExp    = txSum(['Gastos No Operacionales'],   'Entrada') - txSum(['Gastos No Operacionales'],   'Salida');
+    finalNetIncome     = (finalOperIncome + finalNonOperIncome) - (finalOperExp + finalNonOperExp);
+  }
+
+  // ── RENDERIZAR ESTADO DE RESULTADOS ──────────────────────
+  setText('operIncome',      fmtCurrency(finalOperIncome,    'MXN'));
+  setText('nonOperIncome',   fmtCurrency(finalNonOperIncome, 'MXN'));
+  setText('operExpenses',    fmtCurrency(finalOperExp,       'MXN'));
+  setText('nonOperExpenses', fmtCurrency(finalNonOperExp,    'MXN'));
+  setText('netIncome',       fmtCurrency(finalNetIncome,     'MXN'));
+
+  // ── RENDERIZAR BALANCE GENERAL ────────────────────────────
+  setText('currentAssets',         fmtCurrency(currentAssets,    'MXN'));
+  setText('nonCurrentAssets',      fmtCurrency(nonCurrentAssets, 'MXN'));
+  setText('deferredAssets',        fmtCurrency(deferredAssets,   'MXN'));
+  setText('totalAssets',           fmtCurrency(totalAssets,      'MXN'));
 
   setText('currentLiabilities',    fmtCurrency(currentLiab,    'MXN'));
   setText('nonCurrentLiabilities', fmtCurrency(nonCurrentLiab, 'MXN'));
   setText('totalLiabilities',      fmtCurrency(totalLiab,      'MXN'));
 
-  setText('capitalStock',    fmtCurrency(capitalStock, 'MXN'));
-  setText('retainedEarnings', fmtCurrency(retained,    'MXN'));
-  setText('totalEquity',     fmtCurrency(totalEquity,  'MXN'));
+  setText('capitalStock',          fmtCurrency(capitalStock, 'MXN'));
+  setText('retainedEarnings',      fmtCurrency(retained,     'MXN'));
+  setText('totalEquity',           fmtCurrency(totalEquity,  'MXN'));
 
   setText('totalLiabilitiesEquity', fmtCurrency(totalLiab + totalEquity, 'MXN'));
 
   // Color utilidad/pérdida
   const netEl = document.getElementById('netIncome');
   if (netEl) {
-    netEl.style.color = netIncome >= 0
+    netEl.style.color = finalNetIncome >= 0
       ? 'var(--color-success, #16a34a)'
       : 'var(--color-error,   #dc2626)';
   }
 
   // Verificación ecuación contable
-  const balances = document.getElementById('balanceCheck');
-  if (balances) {
+  const balCheck = document.getElementById('balanceCheck');
+  if (balCheck) {
     const diff = Math.abs(totalAssets - (totalLiab + totalEquity));
-    balances.textContent = diff < 0.01
+    balCheck.textContent = diff < 0.01
       ? '✅ Ecuación contable: Activos = Pasivos + Patrimonio'
       : `⚠️ Diferencia: ${dmtCurrency(diff, 'MXN')} (revisa tus registros)`;
-    balances.className = diff < 0.01 ? 'balance-ok' : 'balance-warn';
+    balCheck.className = diff < 0.01 ? 'balance-ok' : 'balance-warn';
   }
 }
 
